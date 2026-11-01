@@ -1288,7 +1288,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.5';
+const VERSION = 'v1.6';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -1418,80 +1418,84 @@ function sheetLines(im) {
     x.putImageData(out, 0, 0);
     return c;
 }
-// "Simple" / "Detailed": a real photo -> a line drawing. The photo is smoothed, its colours are grouped
-// into a few areas, tiny bits are merged away, and the borders between areas become the outlines.
+// "Simple" / "Detailed": a real photo -> a line drawing, by tracing its real edges.
+// Photo -> colouring outline, version 3 (edge tracing).
+// 1) shrink, 2) smooth away texture but keep real edges, 3) find edges in brightness AND colour,
+// 4) keep only the ridge of each edge, strong + connected (Canny), 5) drop short scraps (fur, grain),
+// 6) bridge small gaps so areas are closed for colouring, 7) draw as smooth bold lines.
 function photoLines(im, detail) {
-  const S = 360, k0 = S / Math.max(im.width, im.height), w = Math.max(16, Math.round(im.width * k0)), h = Math.max(16, Math.round(im.height * k0)), n = w * h;
+  const S = detail ? 420 : 340, k0 = S / Math.max(im.width, im.height), w = Math.max(16, Math.round(im.width * k0)), h = Math.max(16, Math.round(im.height * k0)), n = w * h;
   const sm = document.createElement('canvas'); sm.width = w; sm.height = h; const sx = sm.getContext('2d', { willReadFrequently: true });
-  sx.drawImage(im, 0, 0, w, h);
-  const px = sx.getImageData(0, 0, w, h).data, ch = [new Float32Array(n), new Float32Array(n), new Float32Array(n)];
-  for (let p = 0; p < n; p++) { const r = px[p * 4], g = px[p * 4 + 1], b = px[p * 4 + 2]; ch[0][p] = 0.299 * r + 0.587 * g + 0.114 * b; ch[1][p] = 128 - 0.169 * r - 0.331 * g + 0.5 * b; ch[2][p] = 128 + 0.5 * r - 0.419 * g - 0.081 * b; }
-  const Y0 = ch[0].slice();
-  const blur = (a, r) => { const t = new Float32Array(n);
-    for (let pass = 0; pass < 3; pass++) {
-      for (let y = 0; y < h; y++) { let s = 0, cnt = 0; for (let x = -r; x < w + r; x++) { if (x + r < w) { s += a[y * w + x + r]; cnt++; } if (x - r - 1 >= 0) { s -= a[y * w + x - r - 1]; cnt--; } if (x >= 0 && x < w) t[y * w + x] = s / cnt; } }
-      for (let x = 0; x < w; x++) { let s = 0, cnt = 0; for (let y = -r; y < h + r; y++) { if (y + r < h) { s += t[(y + r) * w + x]; cnt++; } if (y - r - 1 >= 0) { s -= t[(y - r - 1) * w + x]; cnt--; } if (y >= 0 && y < h) a[y * w + x] = s / cnt; } }
-    } };
-  for (const c of ch) blur(c, detail ? 1 : 2);
-  // group colours (k-means)
-  const K = detail ? 9 : 5; let seed = 12345; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const cen = []; cen.push([ch[0][0], ch[1][0], ch[2][0]]);
-  const dist = (p, c) => { const a = ch[0][p] - c[0], b = ch[1][p] - c[1], d = ch[2][p] - c[2]; return a * a * 0.35 + (b * b + d * d) * 2.2; };
-  const cdist = (u, v) => { const a = u[0] - v[0], b = u[1] - v[1], d = u[2] - v[2]; return a * a + (b * b + d * d) * 2.2; };
-  while (cen.length < K) { let best = -1, bp = 0; for (let t = 0; t < 400; t++) { const p = Math.floor(rnd() * n); const d = Math.min(...cen.map(c => dist(p, c))); if (d > best) { best = d; bp = p; } } cen.push([ch[0][bp], ch[1][bp], ch[2][bp]]); }
-  const lab = new Uint8Array(n);
-  for (let it = 0; it < 10; it++) {
-    const sum = cen.map(() => [0, 0, 0, 0]);
-    for (let p = 0; p < n; p++) { let bi = 0, bd = 1e18; for (let c = 0; c < K; c++) { const d = dist(p, cen[c]); if (d < bd) { bd = d; bi = c; } } lab[p] = bi; const s = sum[bi]; s[0] += ch[0][p]; s[1] += ch[1][p]; s[2] += ch[2][p]; s[3]++; }
-    sum.forEach((s, c) => { if (s[3]) cen[c] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]]; });
-  }
-  // tidy: majority filter, then merge areas that are too small to colour
-  for (let pass = 0; pass < 2; pass++) { const o = lab.slice(), cnt = new Uint16Array(K);
-    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { cnt.fill(0); let bi = lab[y * w + x], bc = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const v = lab[(y + dy) * w + x + dx]; if (++cnt[v] > bc) { bc = cnt[v]; bi = v; } } o[y * w + x] = bi; }
-    lab.set(o); }
-  const minArea = n * (detail ? 0.0012 : 0.005), tiny = n * (detail ? 0.00025 : 0.0008), comp = new Int32Array(n), stack = new Int32Array(n);
-  const keep = (s, la, lb) => s >= tiny && cdist(cen[la], cen[lb]) > 2600; // stands out strongly
-  for (let round = 0; round < 40; round++) {
-    comp.fill(0); let id = 0; const size = [0];
-    for (let p = 0; p < n; p++) { if (comp[p]) continue; id++; let sp = 0, s = 0; stack[sp++] = p; comp[p] = id;
-      while (sp) { const c = stack[--sp], x = c % w; s++; for (const nb of [x > 0 ? c - 1 : -1, x < w - 1 ? c + 1 : -1, c - w, c + w]) if (nb >= 0 && nb < n && !comp[nb] && lab[nb] === lab[p]) { comp[nb] = id; stack[sp++] = nb; } }
-      size.push(s); }
-    let changed = 0;
-    const o = lab.slice();
-    for (let p = 0; p < n; p++) { if (size[comp[p]] >= minArea) continue; const x = p % w;
-      for (const nb of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (nb >= 0 && nb < n && comp[nb] !== comp[p] && size[comp[nb]] >= minArea) { if (!keep(size[comp[p]], lab[p], lab[nb])) { o[p] = lab[nb]; changed++; } break; } }
-    lab.set(o);
-    if (!changed) { // any small areas left with no big neighbour: join whichever neighbour they touch
-      let any = 0; for (let p = 0; p < n; p++) { if (size[comp[p]] >= minArea) continue; const x = p % w; for (const nb of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (nb >= 0 && nb < n && comp[nb] !== comp[p]) { if (!keep(size[comp[p]], lab[p], lab[nb])) { o[p] = lab[nb]; any++; } break; } }
-      lab.set(o); if (!any) break; }
-  }
-  // borders between areas become lines
+  sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = 'high'; sx.drawImage(im, 0, 0, w, h);
+  const px = sx.getImageData(0, 0, w, h).data;
+  let Y = new Float32Array(n), U = new Float32Array(n), V = new Float32Array(n);
+  for (let p = 0; p < n; p++) { const r = px[p * 4], g = px[p * 4 + 1], b = px[p * 4 + 2]; Y[p] = 0.299 * r + 0.587 * g + 0.114 * b; U[p] = 128 - 0.169 * r - 0.331 * g + 0.5 * b; V[p] = 128 + 0.5 * r - 0.419 * g - 0.081 * b; }
+  const W1 = w + 1, sat = a => { const I = new Float64Array(W1 * (h + 1)); for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += a[y * w + x]; I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + s; } } return I; };
+  const box = (I, x0, y0, x1, y1) => I[y1 * W1 + x1] - I[y0 * W1 + x1] - I[y1 * W1 + x0] + I[y0 * W1 + x0];
+  function kuwahara(r) { // edge-keeping smoothing
+    const IY = sat(Y), IU = sat(U), IV = sat(V), IQ = sat(Y.map(v => v * v)), nY = new Float32Array(n), nU = new Float32Array(n), nV = new Float32Array(n);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { let best = 1e18, bY = 0, bU = 0, bV = 0;
+      for (const [ax, ay] of [[x - r, y - r], [x, y - r], [x - r, y], [x, y]]) { const x0 = Math.max(0, ax), y0 = Math.max(0, ay), x1 = Math.min(w, ax + r + 1), y1 = Math.min(h, ay + r + 1), c = (x1 - x0) * (y1 - y0);
+        const m = box(IY, x0, y0, x1, y1) / c, v = box(IQ, x0, y0, x1, y1) / c - m * m; if (v < best) { best = v; bY = m; bU = box(IU, x0, y0, x1, y1) / c; bV = box(IV, x0, y0, x1, y1) / c; } }
+      const p = y * w + x; nY[p] = bY; nU[p] = bU; nV[p] = bV; }
+    Y = nY; U = nU; V = nV; }
+  for (const r of detail ? [3, 2, 2] : [3, 3, 2]) kuwahara(r);
+  const blur1 = a => { const t = new Float32Array(n); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const p = y * w + x; t[p] = (a[p] * 2 + (x > 0 ? a[p - 1] : a[p]) + (x < w - 1 ? a[p + 1] : a[p])) / 4; } for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const p = y * w + x; a[p] = (t[p] * 2 + (y > 0 ? t[p - w] : t[p]) + (y < h - 1 ? t[p + w] : t[p])) / 4; } };
+  for (const a of [Y, U, V]) { blur1(a); blur1(a); }
+  // gradient: strongest of brightness and (boosted) colour change
+  const mag = new Float32Array(n), dir = new Uint8Array(n);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x; let bm = 0, bgx = 0, bgy = 0;
+    for (const [a, k] of [[Y, 1], [U, 1.8], [V, 1.8]]) { const gx = (a[p - w + 1] + 2 * a[p + 1] + a[p + w + 1] - a[p - w - 1] - 2 * a[p - 1] - a[p + w - 1]) * k, gy = (a[p + w - 1] + 2 * a[p + w] + a[p + w + 1] - a[p - w - 1] - 2 * a[p - w] - a[p - w + 1]) * k, m = gx * gx + gy * gy; if (m > bm) { bm = m; bgx = gx; bgy = gy; } }
+    mag[p] = Math.sqrt(bm); const ang = Math.atan2(bgy, bgx); let d = Math.round(((ang < 0 ? ang + Math.PI : ang) / Math.PI) * 4) % 4; dir[p] = d; }
+  // thin to the ridge
+  const nms = new Float32Array(n), off = [[1, 0], [1, 1], [0, 1], [-1, 1]];
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x, [dx, dy] = off[dir[p]], a = mag[p + dy * w + dx], b = mag[p - dy * w - dx]; if (mag[p] >= a && mag[p] >= b) nms[p] = mag[p]; }
+  const vals = Array.from(nms).filter(v => v > 0).sort((a, b) => a - b);
+  const hi = Math.max(detail ? 50 : 70, vals[Math.floor(vals.length * (detail ? 0.83 : 0.88))] || 80), lo = hi * 0.42;
+  const e = new Uint8Array(n), st = [];
+  for (let p = 0; p < n; p++) if (nms[p] >= hi) { e[p] = 1; st.push(p); }
+  while (st.length) { const p = st.pop(), x = p % w; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if ((x === 0 && dx < 0) || (x === w - 1 && dx > 0)) continue; const q = p + dy * w + dx; if (q >= 0 && q < n && !e[q] && nms[q] >= lo) { e[q] = 1; st.push(q); } } }
+  // group connected edge pixels; drop short scraps
+  const comp = new Int32Array(n); let cid = 0; const csize = [0];
+  const nb8 = p => { const x = p % w, o = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; if ((x === 0 && dx < 0) || (x === w - 1 && dx > 0)) continue; const q = p + dy * w + dx; if (q >= 0 && q < n) o.push(q); } return o; };
+  for (let p = 0; p < n; p++) { if (!e[p] || comp[p]) continue; cid++; const s = [p]; comp[p] = cid; let c = 0; while (s.length) { const q = s.pop(); c++; for (const r of nb8(q)) if (e[r] && !comp[r]) { comp[r] = cid; s.push(r); } } csize.push(c); }
+  const minLen = detail ? 14 : 20;
+  for (let p = 0; p < n; p++) if (e[p] && csize[comp[p]] < minLen) e[p] = 0;
+  // bridge gaps: from each line end, join to the nearest other line (or picture edge) within reach
+  const R = detail ? 7 : 9, ends = [];
+  for (let p = 0; p < n; p++) { if (!e[p]) continue; let c = 0; for (const q of nb8(p)) if (e[q]) c++; if (c === 1) ends.push(p); }
+  const bridges = [];
+  for (const p of ends) { const x0 = p % w, y0 = (p - x0) / w; let best = null, bd = 1e9;
+    // walk back along the line a few steps so we don't connect to ourselves
+    const own = new Set([p]); let frontier = [p]; for (let k = 0; k < R + 2; k++) { const nf = []; for (const q of frontier) for (const r of nb8(q)) if (e[r] && !own.has(r)) { own.add(r); nf.push(r); } frontier = nf; }
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const x = x0 + dx, y = y0 + dy, d = dx * dx + dy * dy; if (d > R * R || d >= bd) continue;
+      if (x < 0 || y < 0 || x >= w || y >= h) { if (x < -1 || y < -1 || x > w || y > h) continue; best = [Math.min(w - 1, Math.max(0, x)), Math.min(h - 1, Math.max(0, y))]; bd = d; continue; }
+      const q = y * w + x; if (e[q] && !own.has(q)) { best = [x, y]; bd = d; } }
+    if (best) bridges.push([x0, y0, best[0], best[1]]); }
+  for (const [ax, ay, bx, by] of bridges) { const steps = Math.max(Math.abs(bx - ax), Math.abs(by - ay)); for (let s = 0; s <= steps; s++) { const x = Math.round(ax + (bx - ax) * s / steps), y = Math.round(ay + (by - ay) * s / steps); e[y * w + x] = 1; } }
+  // draw: scale up smoothly, blur a touch, and threshold into clean bold lines
+  // thicken to 3 pixels, scale up smoothly, then make crisp
+  const e2 = e.slice(); for (let p = 0; p < n; p++) if (e[p]) for (const q of nb8(p)) e2[q] = 1;
   const edge = sx.createImageData(w, h), ed = edge.data;
-  const gm = new Float32Array(n);
-  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x, Y = Y0;
-    const gx = Y[p - w + 1] + 2 * Y[p + 1] + Y[p + w + 1] - Y[p - w - 1] - 2 * Y[p - 1] - Y[p + w - 1], gy = Y[p + w - 1] + 2 * Y[p + w] + Y[p + w + 1] - Y[p - w - 1] - 2 * Y[p - w] - Y[p - w + 1]; gm[p] = Math.hypot(gx, gy); }
-  const sorted = Float32Array.from(gm).sort(), thr = Math.max(detail ? 140 : 200, sorted[Math.floor(n * (detail ? 0.94 : 0.97))]);
-  const strong = new Uint8Array(n);
-  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x; if (gm[p] < thr) continue; // keep only the ridge of each edge (thin lines)
-    const gx = Y0[p + 1] - Y0[p - 1], gy = Y0[p + w] - Y0[p - w];
-    const [a1, a2] = Math.abs(gx) > Math.abs(gy) ? [gm[p - 1], gm[p + 1]] : [gm[p - w], gm[p + w]]; if (gm[p] >= a1 && gm[p] >= a2) strong[p] = 1; }
-  { const seen = new Uint8Array(n); // drop tiny bits of edge (specks)
-    for (let p = 0; p < n; p++) { if (!strong[p] || seen[p]) continue; const grp = [p]; seen[p] = 1;
-      for (let g = 0; g < grp.length; g++) { const c = grp[g], x = c % w; for (const dy of [-w, 0, w]) for (const dx of [-1, 0, 1]) { if ((dx === -1 && x === 0) || (dx === 1 && x === w - 1)) continue; const nb = c + dy + dx; if (nb >= 0 && nb < n && strong[nb] && !seen[nb]) { seen[nb] = 1; grp.push(nb); } } }
-      if (grp.length < 8) for (const c of grp) strong[c] = 0; } }
-  for (let p = 0; p < n; p++) { const x = p % w, b = strong[p] || (x < w - 1 && lab[p] !== lab[p + 1]) || (p + w < n && lab[p] !== lab[p + w]); ed[p * 4] = ed[p * 4 + 1] = ed[p * 4 + 2] = b ? 0 : 255; ed[p * 4 + 3] = 255; }
+  for (let p = 0; p < n; p++) { const v = e2[p] ? 0 : 255; ed[p * 4] = ed[p * 4 + 1] = ed[p * 4 + 2] = v; ed[p * 4 + 3] = 255; }
   sx.putImageData(edge, 0, 0);
   const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d', { willReadFrequently: true });
   x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
   const sc = (N * 0.95) / Math.max(w, h), dw = w * sc, dh = h * sc, L = (N - dw) / 2, T = (N - dh) / 2;
   x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(sm, L, T, dw, dh);
-  const d = x.getImageData(0, 0, N, N), q = d.data, ink = new Uint8Array(N * N);
-  for (let p = 0; p < N * N; p++) ink[p] = q[p * 4] < 200 ? 1 : 0;
-  for (let p = 0; p < N * N; p++) { const xx = p % N; const on = ink[p] || (xx > 0 && ink[p - 1]) || (xx < N - 1 && ink[p + 1]) || (p >= N && ink[p - N]) || (p < N * N - N && ink[p + N]); const v = on ? 0 : 255; q[p * 4] = q[p * 4 + 1] = q[p * 4 + 2] = v; q[p * 4 + 3] = 255; }
+  const d = x.getImageData(0, 0, N, N), q = d.data, g = new Float32Array(N * N);
+  for (let p = 0; p < N * N; p++) g[p] = q[p * 4];
+  { const rad = Math.max(1, Math.round(sc * 0.55)), t = new Float32Array(N * N), kk = 2 * rad + 1, cl = v => v < 0 ? 0 : v > N - 1 ? N - 1 : v; // round off the stair-steps
+    for (let pass = 0; pass < 2; pass++) {
+      for (let y = 0; y < N; y++) { const o = y * N; let s = 0; for (let i = -rad; i <= rad; i++) s += g[o + cl(i)]; for (let xx = 0; xx < N; xx++) { t[o + xx] = s / kk; s += g[o + cl(xx + rad + 1)] - g[o + cl(xx - rad)]; } }
+      for (let xx = 0; xx < N; xx++) { let s = 0; for (let i = -rad; i <= rad; i++) s += t[cl(i) * N + xx]; for (let y = 0; y < N; y++) { g[y * N + xx] = s / kk; s += t[cl(y + rad + 1) * N + xx] - t[cl(y - rad) * N + xx]; } }
+    } }
+  for (let p = 0; p < N * N; p++) { const v = g[p] < 150 ? 0 : 255; q[p * 4] = q[p * 4 + 1] = q[p * 4 + 2] = v; q[p * 4 + 3] = 255; }
   x.putImageData(d, 0, 0);
-  x.strokeStyle = '#000'; x.lineWidth = 6; x.strokeRect(L, T, dw, dh); // a frame so the edge areas are closed in
+  x.strokeStyle = '#000'; x.lineWidth = Math.max(4, N / 200); x.strokeRect(L, T, dw, dh);
   return c;
 }
+
 function lineRecord(c) {
   const t = document.createElement('canvas'); t.width = t.height = 360; t.getContext('2d').drawImage(c, 0, 0, 360, 360);
   return { line: c.toDataURL('image/png'), thumb: t.toDataURL('image/jpeg', 0.85), t: Date.now() };
