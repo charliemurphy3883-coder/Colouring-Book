@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>My Colouring Book</title>
+<meta name="theme-color" content="#ffe9f5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Colouring">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #fff3fa; --ink: #4a2b5e; --soft: #ffe1f1; --card: #ffffff; --accent: #ff5fae; --accent2: #8a5cff;
+  --shadow: 0 6px 0 rgba(74, 43, 94, .12), 0 10px 24px rgba(74, 43, 94, .10);
+  --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px);
+  color-scheme: light;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: 'Fredoka', ui-rounded, system-ui, sans-serif; overscroll-behavior: none; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overflow: hidden; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+[hidden] { display: none !important; }
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; padding: calc(var(--sat) + 12px) calc(var(--sar) + 16px) calc(var(--sab) + 12px) calc(var(--sal) + 16px); }
+.ver { position: fixed; top: calc(var(--sat) + 8px); right: calc(var(--sar) + 12px); z-index: 5; background: rgba(255,255,255,.8); color: #a487b5; font: 600 11px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; pointer-events: none; }
+
+/* ---------- home ---------- */
+#home { overflow-y: auto; background: radial-gradient(circle at 15% 10%, #ffe0f0 0, transparent 40%), radial-gradient(circle at 90% 20%, #e8ddff 0, transparent 40%), radial-gradient(circle at 50% 100%, #d9f6ff 0, transparent 50%), var(--bg); }
+.title { text-align: center; margin: 18px 0 18px; font-weight: 700; font-size: clamp(34px, 6vw, 60px); letter-spacing: .01em; line-height: 1; }
+.title span { display: inline-block; animation: bob 3s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.cats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; max-width: 980px; width: 100%; margin: 0 auto; padding-bottom: 20px; }
+.cat { background: var(--card); border-radius: 30px; padding: 12px 12px 10px; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .12s; border: 5px solid var(--c); }
+.cat:active { transform: scale(.96); }
+.cat .pic { width: 100%; aspect-ratio: 1; border-radius: 20px; background: color-mix(in srgb, var(--c) 22%, white); display: grid; place-items: center; overflow: hidden; }
+.cat .pic img { width: 92%; height: 92%; object-fit: contain; border-radius: 14px; }
+.cat b { font-size: clamp(20px, 3vw, 28px); font-weight: 700; }
+
+/* ---------- picture grid ---------- */
+#grid { background: var(--bg); }
+.bar { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.bar h2 { margin: 0; font-size: clamp(26px, 4.5vw, 40px); font-weight: 700; }
+.round { width: 68px; height: 68px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow); display: grid; place-items: center; flex: none; transition: transform .12s; }
+.round:active { transform: scale(.9); }
+.round svg { width: 60%; height: 60%; }
+.thumbs { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 4px 4px 30px; }
+.tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.thumb { position: relative; aspect-ratio: 1; background: #fff; border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; border: 4px solid #fff; transition: transform .12s; }
+.thumb:active { transform: scale(.95); }
+.thumb img, .cat img { pointer-events: none; }
+.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.thumb.done { border-color: var(--c, #ffc94d); }
+.thumb.done::after { content: ''; position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z' fill='%23ffc61a' stroke='%23b37b00' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+.empty { grid-column: 1 / -1; text-align: center; font-size: 24px; color: #a487b5; padding: 60px 10px; }
+
+/* ---------- painting ---------- */
+#paint { padding: 0; background: #fbeefe; display: grid; touch-action: none;
+  grid-template-columns: calc(var(--sal) + 104px) 1fr calc(var(--sar) + 104px); grid-template-rows: 1fr; }
+.tools, .side { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: calc(var(--sat) + 10px) 8px calc(var(--sab) + 10px); }
+.tools { padding-left: calc(var(--sal) + 8px); }
+.side { padding-right: calc(var(--sar) + 8px); justify-content: space-between; }
+.side .grp { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.tool { width: 84px; height: 84px; border-radius: 26px; background: #fff; box-shadow: var(--shadow); display: grid; place-items: center; position: relative; transition: transform .15s, background .15s; }
+.tool svg { width: 70%; height: 70%; overflow: visible; }
+.tool.on { background: #fff7c2; transform: scale(1.08); outline: 5px solid var(--accent); }
+.tool .size { position: absolute; bottom: 5px; right: 6px; border-radius: 50%; background: var(--cur, #ff4fb4); border: 2px solid #fff; box-shadow: 0 0 0 1.5px #0002; }
+.act { width: 76px; height: 76px; border-radius: 50%; background: #fff; box-shadow: var(--shadow); display: grid; place-items: center; transition: transform .12s; }
+.act:active { transform: scale(.9); }
+.act svg { width: 62%; height: 62%; }
+.act.tick { background: #4cd964; width: 88px; height: 88px; }
+.act:disabled { opacity: .35; }
+#colourBtn { width: 92px; height: 92px; border-radius: 50%; box-shadow: var(--shadow), inset 0 0 0 6px #fff; border: 4px solid #fff; position: relative; animation: wiggle 4s ease-in-out infinite; }
+#colourBtn::after { content: ''; position: absolute; right: -8px; bottom: -8px; width: 40px; height: 40px; border-radius: 50%; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 5C12.4 5 4 13 4 23c0 9.5 7.6 18 17.4 18 3.2 0 4.2-2.1 3.4-4.3-.9-2.6.8-4.6 3.5-4.6H34c5.6 0 10-3.9 10-9.6C44 12.6 35.3 5 24 5z' fill='%23ffe6b3' stroke='%234a2b5e' stroke-width='2.5'/%3E%3Ccircle cx='14' cy='22' r='3.6' fill='%23ff4d6d'/%3E%3Ccircle cx='19' cy='13.5' r='3.6' fill='%23ffc61a'/%3E%3Ccircle cx='29' cy='12.5' r='3.6' fill='%2335c46a'/%3E%3Ccircle cx='36' cy='19.5' r='3.6' fill='%233b8cff'/%3E%3C/svg%3E") center/76% no-repeat; box-shadow: 0 2px 6px #0003; }
+@keyframes wiggle { 0%, 88%, 100% { transform: rotate(0); } 92% { transform: rotate(-8deg); } 96% { transform: rotate(8deg); } }
+.stageWrap { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: calc(var(--sat) + 10px) 6px calc(var(--sab) + 10px); }
+#stage { position: relative; background: #fff; border-radius: 22px; box-shadow: 0 8px 30px rgba(74, 43, 94, .18); overflow: hidden; touch-action: none; }
+#stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#lineCv { pointer-events: none; }
+#loading { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: #b49bc4; background: #fff; }
+
+@media (min-width: 700px) and (orientation: landscape) { .cats { grid-template-columns: repeat(3, 1fr); max-width: min(980px, 130vh); } }
+@media (orientation: portrait) {
+  #paint { grid-template-columns: 1fr; grid-template-rows: calc(var(--sat) + 100px) 1fr calc(var(--sab) + 108px); }
+  .tools, .side { flex-direction: row; padding: 8px 10px; }
+  .tools { grid-row: 3; padding-bottom: calc(var(--sab) + 10px); }
+  .side { grid-row: 1; padding-top: calc(var(--sat) + 8px); }
+  .side .grp { flex-direction: row; }
+  .stageWrap { grid-row: 2; padding: 6px 10px; }
+}
+
+/* colour drawer */
+#scrim { position: fixed; inset: 0; background: rgba(74, 43, 94, .25); opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 20; }
+#scrim.open { opacity: 1; pointer-events: auto; }
+#drawer { position: fixed; top: 0; bottom: 0; right: 0; width: min(440px, 88vw); background: #fff; z-index: 21; transform: translateX(105%); transition: transform .3s cubic-bezier(.3, 1.3, .5, 1); border-radius: 36px 0 0 36px; box-shadow: -10px 0 40px rgba(74, 43, 94, .25); display: flex; flex-direction: column; padding: calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) 18px; }
+#drawer.open { transform: none; }
+.tabs { display: flex; gap: 10px; margin-bottom: 14px; }
+.tab { flex: 1; height: 70px; border-radius: 22px; background: #f6eefb; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tab.on { background: linear-gradient(135deg, #ffd6ec, #e3d6ff); box-shadow: inset 0 0 0 4px var(--accent2); }
+.tab i { width: 34px; height: 34px; border-radius: 50%; display: inline-block; }
+.swatches { flex: 1; overflow-y: auto; touch-action: pan-y; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 14px; align-content: start; padding: 6px 4px 10px; }
+.sw { aspect-ratio: 1; border-radius: 50%; box-shadow: 0 4px 0 rgba(0,0,0,.12), inset 0 0 0 3px rgba(255,255,255,.6); position: relative; transition: transform .15s; background-size: cover; }
+.sw.light { box-shadow: 0 4px 0 rgba(0,0,0,.12), inset 0 0 0 2px #d9cde3; }
+.sw:active { transform: scale(.9); }
+.sw.on { transform: scale(1.12); outline: 5px solid var(--ink); outline-offset: 3px; }
+.sw.pop { animation: pop .35s; }
+@keyframes pop { 40% { transform: scale(1.35); } }
+
+/* little "start again?" question */
+#ask { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(74, 43, 94, .35); }
+#ask .box { background: #fff; border-radius: 36px; padding: 26px 30px; display: flex; flex-direction: column; align-items: center; gap: 18px; box-shadow: var(--shadow); animation: pop .3s; }
+#ask .box > svg { width: 90px; height: 90px; }
+#ask .row { display: flex; gap: 26px; }
+#ask .row button { width: 100px; height: 100px; border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow); }
+#ask .row svg { width: 60%; height: 60%; }
+.yes { background: #4cd964; } .no { background: #ff6b6b; }
+.toast { position: fixed; left: 50%; bottom: calc(var(--sab) + 30px); transform: translateX(-50%); background: #fff; padding: 14px 26px; border-radius: 999px; box-shadow: var(--shadow); font-size: 22px; font-weight: 600; z-index: 40; }
+</style>
+</head>
+<body>
+
+<section id="home" class="screen">
+  <div class="ver" id="ver"></div>
+  <h1 class="title" id="title"></h1>
+  <div class="cats" id="cats"></div>
+</section>
+
+<section id="grid" class="screen" hidden>
+  <div class="bar">
+    <button class="round" id="backHome" aria-label="Home"><svg viewBox="0 0 48 48"><path d="M8 23 24 9l16 14" fill="none" stroke="#4a2b5e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 21v18h22V21" fill="#ffd6ec" stroke="#4a2b5e" stroke-width="4.5" stroke-linejoin="round"/><path d="M21 39V29h6v10" fill="#fff" stroke="#4a2b5e" stroke-width="4" stroke-linejoin="round"/></svg></button>
+    <h2 id="gridTitle"></h2>
+  </div>
+  <div class="thumbs" id="thumbs"></div>
+</section>
+
+<section id="paint" class="screen" hidden>
+  <div class="tools" id="tools"></div>
+  <div class="stageWrap" id="stageWrap">
+    <div id="stage">
+      <canvas id="paintCv"></canvas>
+      <canvas id="lineCv"></canvas>
+      <div id="loading">✏️</div>
+    </div>
+  </div>
+  <div class="side">
+    <div class="grp">
+      <button class="act" id="undoBtn" aria-label="Undo"><svg viewBox="0 0 48 48"><path d="M17 12 7 21l10 9" fill="none" stroke="#3b8cff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 21h20a11 11 0 0 1 0 22h-6" fill="none" stroke="#3b8cff" stroke-width="6" stroke-linecap="round"/></svg></button>
+      <button class="act" id="binBtn" aria-label="Start again"><svg viewBox="0 0 48 48"><path d="M10 14h28l-3 28H13z" fill="#ffb3c7" stroke="#4a2b5e" stroke-width="3.5" stroke-linejoin="round"/><path d="M7 13h34M19 13V8h10v5" fill="none" stroke="#4a2b5e" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 20v16M24 20v16M29 20v16" stroke="#4a2b5e" stroke-width="3" stroke-linecap="round"/></svg></button>
+    </div>
+    <button id="colourBtn" aria-label="Colours"></button>
+    <button class="act tick" id="tickBtn" aria-label="Done"><svg viewBox="0 0 48 48"><path d="M11 25l9 9 18-20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+</section>
+
+<div id="scrim"></div>
+<aside id="drawer" aria-label="Colours">
+  <div class="tabs">
+    <button class="tab on" data-tab="plain"><i style="background:conic-gradient(#ff4d6d,#ffc61a,#35c46a,#3b8cff,#b266ff,#ff4d6d)"></i>Colours</button>
+    <button class="tab" data-tab="magic"><i id="magicIcon"></i>Magic</button>
+  </div>
+  <div class="swatches" id="swatches"></div>
+</aside>
+
+<div id="ask" hidden>
+  <div class="box">
+    <svg viewBox="0 0 48 48"><path d="M10 14h28l-3 28H13z" fill="#ffb3c7" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M7 13h34M19 13V8h10v5" fill="none" stroke="#4a2b5e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="row">
+      <button class="no" id="askNo" aria-label="No"><svg viewBox="0 0 48 48"><path d="M14 14l20 20M34 14 14 34" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg></button>
+      <button class="yes" id="askYes" aria-label="Yes"><svg viewBox="0 0 48 48"><path d="M11 25l9 9 18-20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Drawing generators =====
+   Every picture is built from closed outline shapes so each area can be coloured on its own.
+   Pictures are numbered and always come out the same, so saved colouring lines up with its picture.
+   (Don't change existing generators once the app is in use, or saved pictures won't match.) */
+const ART = (() => {
+  const f = n => Math.round(n * 10) / 10;
+  const W = w => (w ? ` stroke-width="${w}"` : '');
+  const path = (d, w) => `<path d="${d}"${W(w)}/>`;
+  const circle = (x, y, r, w) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}"${W(w)}/>`;
+  const ell = (x, y, rx, ry, rot = 0, w) => `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}"${rot ? ` transform="rotate(${f(rot)} ${f(x)} ${f(y)})"` : ''}${W(w)}/>`;
+  const rect = (x, y, w, h, rx = 0, sw) => `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${f(rx)}"${W(sw)}/>`;
+  const dot = (x, y, r) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#000" stroke="none"/>`;
+  const shine = (x, y, r) => `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#fff" stroke="none"/>`;
+  const line = (x1, y1, x2, y2, w = 5) => `<path d="M${f(x1)},${f(y1)} L${f(x2)},${f(y2)}" fill="none" stroke-width="${w}"/>`;
+  const curve = (d, w = 5) => `<path d="${d}" fill="none" stroke-width="${w}"/>`;
+  const poly = pts => 'M' + pts.map(p => f(p[0]) + ',' + f(p[1])).join(' L') + ' Z';
+  const g = (inner, tx, ty, s = 1, flip = false) =>
+    `<g transform="translate(${f(tx)} ${f(ty)}) scale(${flip ? -s : s} ${s})" stroke-width="${f(7 / s)}">${inner}</g>`;
+  const mirror = inner => `<g transform="translate(600 0) scale(-1 1)">${inner}</g>`;
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  function combo(i, sizes) {
+    const total = sizes.reduce((a, b) => a * b, 1);
+    let P = Math.floor(total * 0.6180339) | 1; while (gcd(P, total) !== 1) P += 2;
+    let k = (i * P + 17) % total;
+    return sizes.map(s => { const d = k % s; k = Math.floor(k / s); return d; });
+  }
+
+  /* ---------- shapes ---------- */
+  function star(cx, cy, r, ir = r * 0.48, n = 5, rot = -90) {
+    const pts = [];
+    for (let i = 0; i < n * 2; i++) {
+      const a = (rot + i * 180 / n) * Math.PI / 180, rr = i % 2 ? ir : r;
+      pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+    }
+    return path(poly(pts));
+  }
+  function heartD(cx, cy, s) {
+    const p = (x, y) => f(cx + x * s) + ',' + f(cy + y * s);
+    return `M${p(0, 0.42)} C${p(-0.12, 0.32)} ${p(-0.5, 0.06)} ${p(-0.5, -0.17)} C${p(-0.5, -0.44)} ${p(-0.13, -0.53)} ${p(0, -0.28)} C${p(0.13, -0.53)} ${p(0.5, -0.44)} ${p(0.5, -0.17)} C${p(0.5, 0.06)} ${p(0.12, 0.32)} ${p(0, 0.42)} Z`;
+  }
+  const heart = (cx, cy, s, w) => path(heartD(cx, cy, s), w);
+  function flower(cx, cy, r, n = 5, rot = 0) {
+    let s = '';
+    for (let i = 0; i < n; i++) {
+      const a = rot + i * 360 / n, ar = a * Math.PI / 180;
+      s += ell(cx + Math.cos(ar) * r * 0.58, cy + Math.sin(ar) * r * 0.58, r * 0.44, r * 0.3, a);
+    }
+    return s + circle(cx, cy, r * 0.34);
+  }
+  function sparkle(cx, cy, r) {
+    const k = r * 0.16;
+    return path(`M${f(cx)},${f(cy - r)} Q${f(cx + k)},${f(cy - k)} ${f(cx + r)},${f(cy)} Q${f(cx + k)},${f(cy + k)} ${f(cx)},${f(cy + r)} Q${f(cx - k)},${f(cy + k)} ${f(cx - r)},${f(cy)} Q${f(cx - k)},${f(cy - k)} ${f(cx)},${f(cy - r)} Z`, 5);
+  }
+  function bumpyD(pts, close = true) { // clockwise points -> outward bumps
+    let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+    for (let i = 1; i < pts.length; i++) {
+      const [x1, y1] = pts[i - 1], [x2, y2] = pts[i];
+      const r = Math.hypot(x2 - x1, y2 - y1) / 2;
+      d += ` A${f(r)} ${f(r)} 0 0 1 ${f(x2)},${f(y2)}`;
+    }
+    return d + (close ? ' Z' : '');
+  }
+  function cloud(cx, cy, w) {
+    const h = w * 0.55, yb = cy + h / 2;
+    const pts = [[cx - w / 2, yb], [cx - w * 0.28, yb - h * 0.55], [cx + 0.02 * w, yb - h * 0.75], [cx + w * 0.3, yb - h * 0.5], [cx + w / 2, yb]];
+    return path(bumpyD(pts));
+  }
+  function sun(cx, cy, r, face = true) {
+    let s = '';
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4, da = 0.2;
+      s += path(poly([[cx + Math.cos(a - da) * r * 1.12, cy + Math.sin(a - da) * r * 1.12], [cx + Math.cos(a) * r * 1.6, cy + Math.sin(a) * r * 1.6], [cx + Math.cos(a + da) * r * 1.12, cy + Math.sin(a + da) * r * 1.12]]));
+    }
+    s += circle(cx, cy, r);
+    if (face) s += dot(cx - r * 0.32, cy - r * 0.12, r * 0.09) + dot(cx + r * 0.32, cy - r * 0.12, r * 0.09) + curve(`M${f(cx - r * 0.35)},${f(cy + r * 0.2)} Q${f(cx)},${f(cy + r * 0.5)} ${f(cx + r * 0.35)},${f(cy + r * 0.2)}`, 4);
+    return s;
+  }
+  function moon(cx, cy, r) {
+    return path(`M${f(cx + r * 0.2)},${f(cy - r)} A${f(r)} ${f(r)} 0 1 0 ${f(cx + r * 0.2)},${f(cy + r)} A${f(r * 0.78)} ${f(r * 0.78)} 0 1 1 ${f(cx + r * 0.2)},${f(cy - r)} Z`);
+  }
+  function balloon(cx, cy, r) {
+    return curve(`M${f(cx)},${f(cy + r * 1.3)} q${f(-r * 0.3)},${f(r * 0.5)} 0,${f(r)} t0,${f(r)}`, 4) +
+      path(poly([[cx, cy + r * 1.15], [cx - r * 0.18, cy + r * 1.38], [cx + r * 0.18, cy + r * 1.38]])) +
+      ell(cx, cy, r, r * 1.18) + curve(`M${f(cx - r * 0.55)},${f(cy - r * 0.35)} Q${f(cx - r * 0.45)},${f(cy - r * 0.75)} ${f(cx - r * 0.05)},${f(cy - r * 0.85)}`, 4);
+  }
+  function butterfly(cx, cy, s) {
+    return ell(cx - s * 0.42, cy + s * 0.25, s * 0.32, s * 0.24, 25) + ell(cx + s * 0.42, cy + s * 0.25, s * 0.32, s * 0.24, -25) +
+      ell(cx - s * 0.42, cy - s * 0.18, s * 0.42, s * 0.32, -25) + ell(cx + s * 0.42, cy - s * 0.18, s * 0.42, s * 0.32, 25) +
+      ell(cx, cy, s * 0.1, s * 0.48) + curve(`M${f(cx - 3)},${f(cy - s * 0.45)} q-${f(s * 0.1)},-${f(s * 0.25)} -${f(s * 0.25)},-${f(s * 0.3)} M${f(cx + 3)},${f(cy - s * 0.45)} q${f(s * 0.1)},-${f(s * 0.25)} ${f(s * 0.25)},-${f(s * 0.3)}`, 4);
+  }
+  function ground(y, amp = 14) {
+    return path(`M-10,${y} Q75,${y - amp} 150,${y} T300,${y} T450,${y} T610,${y} L610,610 L-10,610 Z`);
+  }
+  function rainbow(cx, cy, r0, n, bw) {
+    let s = '';
+    for (let k = n - 1; k >= 0; k--) {
+      const Ro = r0 + (k + 1) * bw, Ri = r0 + k * bw;
+      s += path(`M${f(cx - Ro)},${f(cy)} A${f(Ro)} ${f(Ro)} 0 0 1 ${f(cx + Ro)},${f(cy)} L${f(cx + Ri)},${f(cy)} A${f(Ri)} ${f(Ri)} 0 0 0 ${f(cx - Ri)},${f(cy)} Z`);
+    }
+    return s;
+  }
+  function tower(x, y, w, h) { // x = left, y = top of wall
+    let s = path(poly([[x - 8, y], [x + w / 2, y - w * 1.1], [x + w + 8, y]])); // roof
+    s += line(x + w / 2, y - w * 1.1, x + w / 2, y - w * 1.1 - 30, 4) + path(poly([[x + w / 2, y - w * 1.1 - 30], [x + w / 2 + 28, y - w * 1.1 - 22], [x + w / 2, y - w * 1.1 - 14]]), 4);
+    s += rect(x, y, w, h);
+    s += path(`M${f(x + w / 2 - 14)},${f(y + 60)} L${f(x + w / 2 - 14)},${f(y + 40)} A14 14 0 0 1 ${f(x + w / 2 + 14)},${f(y + 40)} L${f(x + w / 2 + 14)},${f(y + 60)} Z`, 5);
+    return s;
+  }
+  function bow(x, y, s, rot = 0) {
+    const inner = path(`M0,0 C${-s * 0.5},${-s * 0.75} ${-s * 1.1},${-s * 0.45} ${-s},0 C${-s * 1.1},${s * 0.45} ${-s * 0.5},${s * 0.75} 0,0 Z`) +
+      path(`M0,0 C${s * 0.5},${-s * 0.75} ${s * 1.1},${-s * 0.45} ${s},0 C${s * 1.1},${s * 0.45} ${s * 0.5},${s * 0.75} 0,0 Z`) + ell(0, 0, s * 0.24, s * 0.28);
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot})">${inner}</g>`;
+  }
+  function partyHat(x, y, s, rot = 0) {
+    const L = [-s * 0.45, 0], T = [0, -s * 1.1], Rr = [s * 0.45, 0];
+    const a = lerp(L, T, 0.35), b = lerp(Rr, T, 0.55), c = lerp(L, T, 0.7), d = lerp(Rr, T, 0.85);
+    const inner = path(poly([L, T, Rr])) + line(a[0], a[1], b[0], b[1]) + line(c[0], c[1], d[0], d[1]) + circle(0, -s * 1.1, s * 0.16);
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot})">${inner}</g>`;
+  }
+  function littleCrown(x, y, s, rot = 0) {
+    const inner = path(poly([[-s * 0.5, 0], [-s * 0.55, -s * 0.7], [-s * 0.25, -s * 0.35], [0, -s * 0.8], [s * 0.25, -s * 0.35], [s * 0.55, -s * 0.7], [s * 0.5, 0]])) + circle(0, -s * 0.18, s * 0.1, 4);
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot})">${inner}</g>`;
+  }
+  function capsule(x1, y1, x2, y2, w) {
+    const L = Math.hypot(x2 - x1, y2 - y1) || 1, nx = -(y2 - y1) / L * w / 2, ny = (x2 - x1) / L * w / 2, r = f(w / 2);
+    return path(`M${f(x1 + nx)},${f(y1 + ny)} L${f(x2 + nx)},${f(y2 + ny)} A${r} ${r} 0 0 0 ${f(x2 - nx)},${f(y2 - ny)} L${f(x1 - nx)},${f(y1 - ny)} A${r} ${r} 0 0 0 ${f(x1 + nx)},${f(y1 + ny)} Z`);
+  }
+  function face(cx, cy, s, cheeks = true) {
+    return dot(cx - s * 0.36, cy, s * 0.1) + shine(cx - s * 0.33, cy - s * 0.04, s * 0.035) + dot(cx + s * 0.36, cy, s * 0.1) + shine(cx + s * 0.39, cy - s * 0.04, s * 0.035) +
+      curve(`M${f(cx - s * 0.16)},${f(cy + s * 0.2)} Q${f(cx)},${f(cy + s * 0.36)} ${f(cx + s * 0.16)},${f(cy + s * 0.2)}`, 5) +
+      (cheeks ? circle(cx - s * 0.58, cy + s * 0.2, s * 0.11, 4) + circle(cx + s * 0.58, cy + s * 0.2, s * 0.11, 4) : '');
+  }
+  function bubbles(r) { let s = ''; for (const [x, y, rr] of [[70, 90, 22], [110, 160, 14], [520, 110, 26], [480, 60, 14], [540, 220, 16], [60, 260, 18]]) s += circle(x + r() * 10, y + r() * 10, rr); return s; }
+  function seaweed(x, h) {
+    return path(`M${x - 14},610 C${x - 40},${600 - h * 0.3} ${x + 20},${600 - h * 0.6} ${x - 6},${600 - h} C${x + 30},${600 - h * 0.65} ${x - 8},${600 - h * 0.3} ${x + 16},610 Z`);
+  }
+  function snowflake(x, y, r) {
+    let s = '';
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; s += line(x - Math.cos(a) * r, y - Math.sin(a) * r, x + Math.cos(a) * r, y + Math.sin(a) * r, 4); }
+    return s;
+  }
+  function bunting(y) {
+    let s = curve(`M-10,${y} Q300,${y + 70} 610,${y}`, 4);
+    for (let i = 0; i < 7; i++) {
+      const x = 30 + i * 90, t = (x + 10) / 620, yy = (1 - t) * (1 - t) * y + 2 * (1 - t) * t * (y + 70) + t * t * y;
+      s += path(poly([[x - 26, yy - 2], [x + 26, yy + 2], [x, yy + 50]]));
+    }
+    return s;
+  }
+
+  /* ---------- backgrounds ---------- */
+  function background(kind, r) {
+    const jig = v => v + (r() - 0.5) * 20;
+    switch (kind) {
+      case 'hearts': return [[70, 80, 60], [530, 80, 56], [60, 290, 46], [545, 300, 50], [80, 480, 54], [520, 490, 48]].map(([x, y, s]) => heart(jig(x), jig(y), s)).join('');
+      case 'stars': return moon(85, 85, 48) + [[520, 80, 34], [450, 150, 18], [70, 300, 26], [540, 300, 30], [80, 480, 22], [530, 480, 26]].map(([x, y, s]) => star(jig(x), jig(y), s)).join('');
+      case 'garden': return ground(530) + sun(80, 80, 40) + flower(70, 450, 50, 5, r() * 60) + flower(535, 455, 46, 6, r() * 60) + cloud(515, 85, 110);
+      case 'sparkle': return cloud(95, 90, 130) + cloud(510, 120, 120) + [[60, 300], [540, 290], [90, 470], [520, 480], [160, 200], [450, 230]].map(([x, y]) => sparkle(jig(x), jig(y), 18 + r() * 10)).join('');
+      case 'balloons': return balloon(80, 120, 42) + balloon(525, 110, 40) + balloon(540, 360, 34) + star(70, 420, 24);
+      case 'butterflies': return butterfly(85, 110, 80) + butterfly(515, 120, 70) + flower(80, 470, 40) + flower(525, 470, 44);
+      case 'sea': return bubbles(r) + seaweed(55, 200) + seaweed(560, 150) + path('M-10,560 Q150,540 300,560 T610,555 L610,610 L-10,610 Z');
+      case 'snow': return ground(520, 8) + [[70, 80], [530, 70], [90, 250], [520, 260], [160, 140], [440, 150]].map(([x, y]) => snowflake(jig(x), jig(y), 18)).join('');
+      case 'pond': return ell(300, 560, 340, 70) + cloud(95, 90, 120) + sun(520, 85, 38) + ell(80, 470, 40, 14) + ell(530, 480, 46, 16);
+      case 'bunting': return bunting(30) + [[70, 300], [530, 310], [80, 480], [520, 480]].map(([x, y]) => star(jig(x), jig(y), 22)).join('');
+      case 'confetti': { let s = ''; for (const [x, y] of [[60, 80], [150, 50], [450, 60], [540, 110], [60, 260], [540, 260], [80, 450], [520, 460]]) { const k = Math.floor(r() * 3); s += k === 0 ? star(jig(x), jig(y), 20) : k === 1 ? heart(jig(x), jig(y), 36) : circle(jig(x), jig(y), 14); } return s; }
+      default: return '';
+    }
+  }
+
+  /* ---------- PRINCESSES ---------- */
+  function tierShape(yTop, wTop, yBot, wBot, scallops) {
+    const TL = [300 - wTop / 2, yTop], TR = [300 + wTop / 2, yTop], BR = [300 + wBot / 2, yBot], BL = [300 - wBot / 2, yBot];
+    let d = `M${f(TL[0])},${f(TL[1])} L${f(TR[0])},${f(TR[1])} L${f(BR[0])},${f(BR[1])}`;
+    if (scallops) {
+      const pts = []; for (let i = 0; i <= scallops; i++) pts.push(lerp(BR, BL, i / scallops));
+      for (let i = 1; i < pts.length; i++) { const r = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) / 2; d += ` A${f(r)} ${f(r * 0.8)} 0 0 1 ${f(pts[i][0])},${f(pts[i][1])}`; }
+    } else d += ` Q300,${f(yBot + 30)} ${f(BL[0])},${f(BL[1])}`;
+    return { d: d + ' Z', edge: y => (wTop / 2 + (wBot - wTop) / 2 * (y - yTop) / (yBot - yTop)) };
+  }
+  function princess(i) {
+    const [hair, fringe, skirt, crown, arms, bgk, rr] = combo(i, [6, 3, 5, 4, 3, 7, 4]);
+    const r = rng(1000 + i);
+    let s = background(['castle', 'hearts', 'stars', 'garden', 'sparkle', 'balloons', 'butterflies'][bgk], r);
+    if (bgk === 0) s += ground(540, 8) + tower(28, 250, 95, 300) + tower(477, 260, 95, 300);
+    // back hair
+    const short = 'M238,175 C232,98 368,98 362,175 C366,212 360,228 350,232 L250,232 C240,228 234,212 238,175 Z';
+    if (hair === 0) s += path('M240,170 C232,92 368,92 360,170 C366,240 374,292 382,332 Q362,348 344,330 L256,330 Q238,348 218,332 C226,292 234,240 240,170 Z');
+    if (hair === 1) s += path(bumpyD([[226, 330], [220, 285], [222, 240], [229, 196], [244, 152], [270, 120], [300, 108], [330, 120], [356, 152], [371, 196], [378, 240], [380, 285], [374, 330]], false) + ' L300,330 Z');
+    if (hair === 2) s += circle(300, 100, 32) + path(short);
+    if (hair === 3) s += ell(222, 210, 30, 46, 18) + ell(378, 210, 30, 46, -18) + path(short) + circle(240, 180, 10) + circle(360, 180, 10);
+    if (hair === 4) { s += path(short); for (let k = 0; k < 6; k++) s += ell(366 + k * 5, 215 + k * 24, 18, 15); s += bow(392, 360, 20); }
+    if (hair === 5) s += path('M238,175 C232,95 368,95 362,175 C366,215 372,245 354,256 Q300,264 246,256 C228,245 234,215 238,175 Z');
+    // dress
+    let skirtStr = '';
+    if (skirt === 4) skirtStr += capsule(278, 430, 278, 512, 22) + capsule(322, 430, 322, 512, 22) + ell(270, 522, 24, 14) + ell(330, 522, 24, 14);
+    if (skirt === 0) skirtStr += path(tierShape(322, 56, 540, 320, 0).d);
+    if (skirt === 1) { skirtStr += path(tierShape(440, 230, 545, 330, 7).d) + path(tierShape(372, 150, 470, 270, 6).d) + path(tierShape(322, 56, 400, 190, 5).d); }
+    if (skirt === 2) { const t = tierShape(322, 56, 540, 320, 0); skirtStr += path(t.d); const e = t.edge(470); skirtStr += line(300 - e, 470, 300 + e, 470) + [-100, -50, 0, 50, 100].map(x => heart(300 + x, 505, 30)).join(''); }
+    if (skirt === 3) { const t = tierShape(322, 56, 540, 320, 8); skirtStr += path(t.d) + [[300, 380], [260, 430], [340, 430], [220, 490], [300, 485], [380, 490]].map(([x, y]) => star(x, y, 16)).join(''); }
+    if (skirt === 4) skirtStr += path(tierShape(322, 56, 440, 220, 5).d);
+    s += rect(288, 222, 24, 44) + skirtStr;
+    s += path('M262,258 L338,258 L328,330 L272,330 Z') + curve('M284,258 Q300,276 316,258');
+    // arms
+    if (arms === 0) s += capsule(255, 285, 230, 372, 22) + capsule(345, 285, 370, 372, 22) + circle(228, 380, 14) + circle(372, 380, 14);
+    if (arms === 1) s += capsule(255, 285, 230, 372, 22) + circle(228, 380, 14) + capsule(404, 232, 432, 140, 9) + capsule(345, 285, 400, 238, 22) + circle(404, 232, 14) + star(434, 126, 30);
+    if (arms === 2) s += capsule(258, 285, 286, 352, 22) + capsule(342, 285, 314, 352, 22) + ell(272, 380, 14, 26, -30) + ell(328, 380, 14, 26, 30) + flower(276, 352, 26) + flower(324, 352, 26) + flower(300, 330, 28);
+    s += circle(258, 272, 22) + circle(342, 272, 22);
+    s += rect(270, 318, 60, 16, 6) + (rr % 2 ? bow(300, 326, 20) : circle(300, 326, 8, 4));
+    // head + fringe + face
+    s += circle(300, 170, 60);
+    if (fringe === 0) s += path('M238,172 A63 63 0 1 1 362,172 Q356,150 340,138 Q330,152 312,140 Q300,152 286,138 Q272,152 258,142 Q244,150 238,172 Z');
+    if (fringe === 1) s += path('M238,172 A63 63 0 1 1 362,172 Q330,118 278,146 Q252,155 238,172 Z');
+    if (fringe === 2) s += path('M238,172 A63 63 0 1 1 362,172 Q342,126 300,120 Q258,126 238,172 Z');
+    s += dot(278, 178, 7) + shine(280, 175, 2.2) + dot(322, 178, 7) + shine(324, 175, 2.2) + line(271, 172, 265, 167, 4) + line(329, 172, 335, 167, 4) +
+      curve('M287,200 Q300,212 313,200') + circle(261, 195, 9, 4) + circle(339, 195, 9, 4);
+    // crown
+    if (crown === 0) s += path('M262,124 L270,98 L284,113 L300,84 L316,113 L330,98 L338,124 Q300,113 262,124 Z') + circle(300, 108, 7, 4);
+    if (crown === 1) s += path('M266,124 L262,74 L283,97 L300,66 L317,97 L338,74 L334,124 Z') + line(265, 110, 335, 110) + circle(262, 74, 7, 4) + circle(300, 66, 7, 4) + circle(338, 74, 7, 4);
+    if (crown === 2) for (let k = 0; k < 5; k++) { const a = (215 + k * 27.5) * Math.PI / 180; s += flower(300 + Math.cos(a) * 62, 170 + Math.sin(a) * 62, 26, 5, k * 20); }
+    if (crown === 3) s += path('M260,126 Q300,104 340,126 L336,114 Q300,94 264,114 Z') + heart(300, 92, 40);
+    return s;
+  }
+
+  /* ---------- UNICORNS ---------- */
+  function uniHead(eye, maneStyle, acc) {
+    let s = '';
+    s += path('M400,178 L388,128 L430,166 Z'); // ear
+    s += path('M420,170 L452,88 L448,176 Z');  // horn
+    const hl = [420, 170], ht = [452, 88], hr = [448, 176];
+    for (const t of [0.25, 0.5, 0.72]) { const a = lerp(hl, ht, t), b = lerp(hr, ht, t + 0.1); s += line(a[0], a[1], b[0], b[1]); }
+    s += circle(425, 225, 62);
+    s += ell(476, 256, 44, 34) + dot(496, 248, 5) + curve('M466,272 Q482,282 498,270');
+    if (eye === 0) s += curve('M424,214 Q437,228 452,214') + line(428, 220, 422, 228, 4) + line(437, 224, 435, 233, 4) + line(447, 221, 451, 229, 4);
+    else s += dot(440, 214, 10) + shine(443, 210, 3.2) + line(448, 206, 455, 199, 4) + line(442, 203, 446, 195, 4);
+    s += circle(430, 246, 9, 4);
+    if (maneStyle === 0) s += ell(405, 172, 24, 14, -35);
+    if (maneStyle === 1) s += circle(402, 172, 16);
+    if (maneStyle === 2) s += path('M388,190 C390,160 420,150 440,165 C420,165 410,178 388,190 Z');
+    if (acc === 0) s += flower(395, 196, 22, 5, 10);
+    if (acc === 1) s += flower(392, 162, 18) + flower(372, 182, 16, 5, 30);
+    return s;
+  }
+  function uniMane(style) {
+    let s = '';
+    const A = [392, 168], B = [318, 322];
+    if (style === 0) for (let k = 0; k < 6; k++) { const p = lerp(A, B, k / 5); s += ell(p[0] - 18, p[1] - 6, 32, 20, 118); }
+    if (style === 1) for (let k = 0; k < 6; k++) { const p = lerp(A, B, k / 5); s += circle(p[0] - 16, p[1] - 6, 24) + curve(`M${f(p[0] - 16)},${f(p[1] - 6)} m-8,0 a8 8 0 1 1 8,8`, 4); }
+    if (style === 2) s += path('M395,165 C350,160 330,220 300,250 C330,248 330,272 305,300 C335,298 338,322 318,345 L380,300 L420,190 Z') + curve('M370,190 C345,225 335,260 330,290', 4);
+    return s;
+  }
+  function uniTail(style) {
+    if (style === 0) return ell(138, 342, 40, 24, -25) + ell(118, 382, 38, 22, -65) + ell(130, 424, 34, 20, -100);
+    if (style === 1) return path('M170,330 C105,310 82,385 118,422 C96,452 128,486 152,474 C138,442 160,410 176,380 Z') + curve('M150,338 C122,350 112,380 124,404', 4);
+    return circle(140, 340, 24) + circle(120, 375, 24) + circle(128, 414, 22) + circle(150, 446, 18);
+  }
+  function unicorn(i) {
+    const [layout, mane, tail, wings, eye, acc, bgk, flip] = combo(i, [2, 3, 3, 2, 2, 3, 7, 2]);
+    const r = rng(2000 + i);
+    const bgName = ['rainbow', 'hearts', 'stars', 'garden', 'sparkle', 'butterflies', 'confetti'][bgk];
+    let bg = bgName === 'rainbow' ? rainbow(300, 600, 200, 5, 30) + cloud(85, 560, 140) + cloud(515, 560, 140) + sparkle(80, 90, 22) + sparkle(520, 80, 22) : background(bgName, r);
+    let s = '';
+    if (layout === 0) {
+      if (bgName === 'garden') bg = background('sparkle', r) + ground(520);
+      s += capsule(205, 400, 200, 500, 34) + capsule(240, 410, 242, 506, 34) + capsule(328, 410, 330, 506, 34) + capsule(362, 400, 368, 500, 34);
+      for (const x of [200, 242, 330, 368]) s += rect(x - 20, 496, 40, 24, 9);
+      s += uniTail(tail);
+      if (acc === 2) s += bow(165, 338, 22, -20);
+      s += path('M330,330 L382,212 L442,238 L396,346 Z');
+      s += ell(280, 370, 125, 78);
+      if (wings) s += path('M232,330 C200,258 240,212 312,222 C338,226 338,252 322,260 C334,274 322,294 302,294 C306,312 290,326 270,322 C268,336 246,344 232,330 Z');
+      s += uniMane(mane) + uniHead(eye, mane, acc);
+      return bg + (flip ? mirror(s) : s);
+    }
+    // portrait
+    let p = path('M388,255 C382,330 362,385 335,450 L490,450 C475,385 462,320 458,262 Z');
+    p += uniMane(mane) + uniHead(eye, mane, acc);
+    s = `<g transform="translate(-359 -79) scale(1.55)" stroke-width="4.5">${p}</g>`;
+    if (bgName === 'garden') bg = background('sparkle', r);
+    const fl = acc === 2 || wings ? flower(110, 540, 44) + flower(190, 560, 36, 6) : '';
+    return bg + (flip ? mirror(s + fl) : s + fl);
+  }
+
+  /* ---------- CAKES ---------- */
+  function tierDeco(kind, x, y, w, h, r) {
+    let s = '';
+    if (kind === 0) { // drip icing
+      let d = `M${x},${y + 20} Q${x},${y} ${x + 20},${y} L${x + w - 20},${y} Q${x + w},${y} ${x + w},${y + 20} L${x + w},${y + 30}`;
+      const n = Math.max(3, Math.round(w / 48)), sw = w / n;
+      for (let k = 0; k < n; k++) { const xa = x + w - k * sw, xb = xa - sw, L = k % 2 ? 16 : 34; d += ` C${f(xa - 2)},${f(y + 30 + L * 1.3)} ${f(xb + 2)},${f(y + 30 + L * 1.3)} ${f(xb)},${y + 30}`; }
+      s += path(d + ' Z');
+    }
+    if (kind === 1) { const n = Math.floor(w / 46); for (let k = 0; k < n; k++) s += circle(x + w * (k + 0.5) / n, y + h * 0.55, 10); }
+    if (kind === 2) { const n = Math.floor(w / 60); for (let k = 0; k < n; k++) s += heart(x + w * (k + 0.5) / n, y + h * 0.55, Math.min(40, h * 0.5)); }
+    if (kind === 3) { for (let xx = x + 30; xx < x + w - 15; xx += 36) s += line(xx, y, xx, y + h); }
+    if (kind === 4) { let d = `M${x},${y + h * 0.5}`; const n = Math.round(w / 40); for (let k = 1; k <= n; k++) d += ` L${f(x + w * k / n)},${f(y + h * (k % 2 ? 0.3 : 0.7))}`; s += curve(d.replace(/L([\d.]+),[\d.]+$/, `L${x + w},${y + h * 0.5}`)); }
+    if (kind === 5) { const n = Math.floor(w / 60); for (let k = 0; k < n; k++) s += star(x + w * (k + 0.5) / n, y + h * 0.55, Math.min(22, h * 0.28)); }
+    if (kind === 6) { const pts = []; const n = Math.round(w / 34); for (let k = 0; k <= n; k++) pts.push([x + w - w * k / n, y + h - 30]); s += path(`M${x},${y + h} L${x},${y + h - 30} L${x + w},${y + h - 30} L${x + w},${y + h} Z`); s += curve(bumpyD(pts, false).replace(/^M[^A]+/, `M${x + w},${y + h - 30}`)); }
+    return s;
+  }
+  function topper(kind, x, y, r) { // y = top surface of top tier
+    let s = '';
+    if (kind === 0) { const n = 1 + Math.floor(r() * 4), sp = 34; for (let k = 0; k < n; k++) { const cx = x + (k - (n - 1) / 2) * sp; s += rect(cx - 9, y - 58, 18, 68, 4) + path(`M${cx},${y - 92} C${cx + 13},${y - 76} ${cx + 11},${y - 62} ${cx},${y - 62} C${cx - 11},${y - 62} ${cx - 13},${y - 76} ${cx},${y - 92} Z`); } }
+    if (kind === 1) s += path(`M${x},${y + 4} C${x - 60},${y - 30} ${x - 46},${y - 92} ${x},${y - 80} C${x + 46},${y - 92} ${x + 60},${y - 30} ${x},${y + 4} Z`) + path(`M${x - 26},${y - 80} L${x - 14},${y - 98} L${x},${y - 84} L${x + 14},${y - 98} L${x + 26},${y - 80} Z`, 5) + [[-18, -50], [14, -55], [-4, -30], [20, -28], [-22, -22]].map(([a, b]) => dot(x + a, y + b, 3)).join('');
+    if (kind === 2) s += curve(`M${x},${y - 46} Q${x + 6},${y - 84} ${x + 28},${y - 96}`, 5) + ell(x + 34, y - 98, 16, 8, -25) + circle(x, y - 26, 30);
+    if (kind === 3) s += capsule(x, y + 6, x, y - 50, 8) + heart(x, y - 82, 80);
+    if (kind === 4) s += capsule(x, y + 6, x, y - 50, 8) + star(x, y - 82, 44);
+    if (kind === 5) s += path(`M${x - 46},${y + 4} L${x - 52},${y - 60} L${x - 24},${y - 30} L${x},${y - 72} L${x + 24},${y - 30} L${x + 52},${y - 60} L${x + 46},${y + 4} Z`) + circle(x, y - 18, 8, 4);
+    if (kind === 6) s += flower(x - 40, y - 18, 34, 5, 15) + flower(x + 40, y - 18, 34, 5, 40) + flower(x, y - 34, 38);
+    if (kind === 7) { for (const dx of [-60, 60, 0]) s += path(`M${x + dx - 26},${y + 4} Q${x + dx - 30},${y - 26} ${x + dx},${y - 30} Q${x + dx + 4},${y - 50} ${x + dx - 6},${y - 58} Q${x + dx + 24},${y - 50} ${x + dx + 26},${y - 20} Q${x + dx + 30},${y} ${x + dx + 26},${y + 4} Z`); s += circle(x, y - 76, 18); }
+    return s;
+  }
+  function stand(kind, by) {
+    if (kind === 0) return ell(300, by + 8, 210, 26);
+    if (kind === 1) return path(`M270,${by + 20} L282,${by + 70} L318,${by + 70} L330,${by + 20} Z`) + ell(300, by + 78, 70, 14) + ell(300, by + 10, 205, 22);
+    return '';
+  }
+  function cupcake(cx, by, s, frost, wrap, top, r) {
+    const X = v => cx + v * s, Y = v => by + v * s;
+    let o = '';
+    o += path(`M${X(-100)},${Y(-140)} L${X(100)},${Y(-140)} L${X(72)},${Y(0)} L${X(-72)},${Y(0)} Z`);
+    if (wrap === 0) for (let k = 1; k < 6; k++) { const t = k / 6; o += line(X(-100 + 200 * t), Y(-140), X(-72 + 144 * t), Y(0), 5); }
+    if (wrap === 1) o += line(X(-94), Y(-110), X(94), Y(-110)) + [-45, 0, 45].map(v => heart(X(v), Y(-58), 34 * s)).join('');
+    if (wrap === 2) o += [[-50, -100], [0, -60], [50, -100], [-30, -25], [30, -25]].map(([a, b]) => circle(X(a), Y(b), 10 * s)).join('');
+    if (frost === 0) o += path(`M${X(-118)},${Y(-130)} Q${X(-125)},${Y(-175)} ${X(-80)},${Y(-180)} L${X(80)},${Y(-180)} Q${X(125)},${Y(-175)} ${X(118)},${Y(-130)} Q${X(0)},${Y(-110)} ${X(-118)},${Y(-130)} Z`) +
+      path(`M${X(-92)},${Y(-175)} Q${X(-100)},${Y(-218)} ${X(-60)},${Y(-222)} L${X(60)},${Y(-222)} Q${X(100)},${Y(-218)} ${X(92)},${Y(-175)} Q${X(0)},${Y(-160)} ${X(-92)},${Y(-175)} Z`) +
+      path(`M${X(-62)},${Y(-218)} Q${X(-66)},${Y(-262)} ${X(-20)},${Y(-262)} Q${X(-4)},${Y(-300)} ${X(10)},${Y(-300)} Q${X(14)},${Y(-275)} ${X(26)},${Y(-262)} Q${X(66)},${Y(-262)} ${X(62)},${Y(-218)} Q${X(0)},${Y(-205)} ${X(-62)},${Y(-218)} Z`);
+    else o += path(`M${X(-118)},${Y(-132)} C${X(-140)},${Y(-260)} ${X(140)},${Y(-260)} ${X(118)},${Y(-132)} Q${X(80)},${Y(-110)} ${X(60)},${Y(-130)} Q${X(30)},${Y(-108)} ${X(0)},${Y(-130)} Q${X(-30)},${Y(-108)} ${X(-60)},${Y(-130)} Q${X(-80)},${Y(-110)} ${X(-118)},${Y(-132)} Z`) +
+      [[-60, -180], [-20, -215], [30, -195], [65, -165], [0, -160], [-80, -150]].map(([a, b], k) => ell(X(a), Y(b), 9 * s, 4 * s, k * 40, 4)).join('');
+    if (top === 0) o += circle(X(0), Y(frost ? -238 : -318), 22 * s) + curve(`M${X(0)},${Y(frost ? -258 : -338)} Q${X(4)},${Y(frost ? -285 : -365)} ${X(22)},${Y(frost ? -292 : -372)}`, 5);
+    if (top === 1) o += star(X(0), Y(frost ? -250 : -322), 30 * s);
+    if (top === 2) o += heart(X(0), Y(frost ? -250 : -322), 54 * s);
+    return o;
+  }
+  function cake(i) {
+    const [type, d1, d2, tk, st, bgk, n] = combo(i, [10, 7, 7, 8, 3, 6, 3]);
+    const r = rng(3000 + i);
+    let s = background(['bunting', 'balloons', 'confetti', 'hearts', 'sparkle', 'stars'][bgk === 0 && type <= 5 && n === 2 ? 2 : bgk], r);
+    if (type <= 5) {
+      const tiers = [[[380, 190]], [[380, 150], [270, 125]], [[400, 120], [300, 105], [200, 95]]][n];
+      const by = st === 1 ? 470 : 520;
+      s += stand(st, by);
+      let y = by + (st === 0 ? 6 : 4), topY = y; const parts = [];
+      tiers.forEach(([w, h], k) => { y -= h; parts.push([300 - w / 2, y, w, h, k]); topY = y; });
+      s += topper(tk, 300, topY, r);
+      for (const [x, yy, w, h, k] of parts) s += rect(x, yy, w, h, 14) + tierDeco(k % 2 ? d2 : d1, x, yy, w, h, r);
+      if (tk === 0 || tk === 3 || tk === 4) { /* toppers sit behind top tier edge */ }
+      return s;
+    }
+    if (type <= 7) {
+      if (n === 0 || type === 6) return s + cupcake(300, 540, 1.25, d1 % 2, d2 % 3, tk % 3, r);
+      return s + cupcake(160, 520, 0.72, d1 % 2, d2 % 3, tk % 3, r) + cupcake(440, 520, 0.72, (d1 + 1) % 2, (d2 + 1) % 3, (tk + 1) % 3, r) + cupcake(300, 560, 0.85, d2 % 2, d1 % 3, (tk + 2) % 3, r);
+    }
+    if (type === 8) { // donut
+      const pts = []; for (let k = 0; k <= 16; k++) { const a = Math.PI * 2 * k / 16; const rr = 130 + (k % 2 ? -8 : 10); pts.push([300 + Math.cos(a) * rr, 320 + Math.sin(a) * rr]); }
+      s += (st ? ell(300, 470, 230, 40) : '') + circle(300, 320, 160);
+      let d = `M${f(pts[0][0])},${f(pts[0][1])}`; for (let k = 1; k < pts.length; k++) { const a = Math.PI * 2 * (k - 0.5) / 16, cr = 148; d += ` Q${f(300 + Math.cos(a) * cr)},${f(320 + Math.sin(a) * cr)} ${f(pts[k][0])},${f(pts[k][1])}`; }
+      s += path(d + ' Z');
+      for (let k = 0; k < 14; k++) { const a = Math.PI * 2 * (k + r() * 0.4) / 14, rad = 80 + (k % 2) * 30; const x = 300 + Math.cos(a) * rad, y = 320 + Math.sin(a) * rad; s += d1 % 2 ? capsule(x - 9, y - 4, x + 9, y + 4, 9) : (d1 % 3 ? circle(x, y, 7, 4) : star(x, y, 12)); }
+      s += circle(300, 320, 52);
+      return s;
+    }
+    // slice
+    const A = [100, 370], B = [510, 250], C = [460, 340], h = 150;
+    s += ell(300, 540, 260, 42);
+    s += path(poly([C, B, [B[0], B[1] + h], [C[0], C[1] + h]]));
+    s += path(poly([A, C, [C[0], C[1] + h], [A[0], A[1] + h]]));
+    for (const yy of [55, 105]) s += line(A[0], A[1] + yy, C[0], C[1] + yy);
+    s += line(C[0], C[1] + 55, B[0], B[1] + 55) + line(C[0], C[1] + 105, B[0], B[1] + 105);
+    s += path(poly([A, C, B]));
+    let d = `M${A[0]},${A[1]} L${C[0]},${C[1]} L${C[0]},${C[1] + 26}`; const n2 = 6;
+    for (let k = 0; k < n2; k++) { const p1 = lerp(C, A, k / n2), p2 = lerp(C, A, (k + 1) / n2), L = k % 2 ? 14 : 34; d += ` C${f(p1[0])},${f(p1[1] + 26 + L)} ${f(p2[0])},${f(p2[1] + 26 + L)} ${f(p2[0])},${f(p2[1] + (k === n2 - 1 ? 0 : 26))}`; }
+    s += path(d + ' Z');
+    s += topper([1, 2, 6, 7][tk % 4], 380, 315, r);
+    return s;
+  }
+
+  /* ---------- LOLLIES ---------- */
+  function lolly(i) {
+    const [type, v, fc, bgk, v2] = combo(i, [9, 3, 2, 6, 2]);
+    const r = rng(4000 + i);
+    let s = background(['sparkle', 'hearts', 'confetti', 'stars', 'balloons', 'bunting'][bgk], r);
+    const faceOn = fc === 1;
+    if (type === 0) { // lollipop
+      const one = (cx, cy, R, st) => {
+        let o = capsule(cx, cy + R - 10, cx, cy + R + 230, 22) + circle(cx, cy, R);
+        if (st === 0) { const n = 8; for (let k = 0; k < n; k++) { const a = Math.PI * 2 * k / n; o += line(cx + Math.cos(a) * R * 0.2, cy + Math.sin(a) * R * 0.2, cx + Math.cos(a) * R, cy + Math.sin(a) * R); } o += circle(cx, cy, R * 0.2); }
+        if (st === 1) for (const k of [0.75, 0.5, 0.25]) o += circle(cx, cy, R * k);
+        if (st === 2) { let d = `M${cx},${cy}`; for (let a = 0; a <= Math.PI * 6; a += 0.3) { const rr = R * a / (Math.PI * 6); d += ` L${f(cx + Math.cos(a) * rr)},${f(cy + Math.sin(a) * rr)}`; } o += curve(d); }
+        return o;
+      };
+      if (v2) return s + one(300, 220, 140, v) + bow(300, 400, 36) + (faceOn ? '' : '');
+      return s + `<g transform="rotate(-18 300 560)">${one(300, 210, 90, (v + 1) % 3)}</g><g transform="rotate(18 300 560)">${one(300, 210, 90, (v + 2) % 3)}</g>` + one(300, 180, 100, v) + bow(300, 470, 34);
+    }
+    if (type === 1) { // wrapped sweet
+      s += path('M200,300 L80,230 Q62,300 80,370 Z') + line(110, 255, 110, 345) + line(140, 270, 140, 330);
+      s += path('M400,300 L520,230 Q538,300 520,370 Z') + line(490, 255, 490, 345) + line(460, 270, 460, 330);
+      s += ell(300, 300, 115, 80);
+      if (!faceOn) { for (const x of [240, 300, 360]) { const yy = 80 * Math.sqrt(1 - ((x - 300) / 115) ** 2); s += v ? curve(`M${x - 15},${f(300 - yy)} Q${x + 25},300 ${x - 15},${f(300 + yy)}`) : circle(x, 300 + (x === 300 ? -30 : 25), 15); } }
+      else s += face(300, 295, 90);
+      return s;
+    }
+    if (type === 2) { // candy cane
+      let o = path('M258,560 L258,250 A82 82 0 0 1 422,250 L422,300 A22 22 0 0 1 378,300 L378,250 A38 38 0 0 0 302,250 L302,560 A22 22 0 0 1 258,560 Z');
+      for (let y = 300; y <= 540; y += 48) o += line(258, y, 302, y - 26);
+      for (const a of [200, 240, 280, 320, 355]) { const ar = a * Math.PI / 180; o += line(340 + Math.cos(ar) * 38, 250 + Math.sin(ar) * 38, 340 + Math.cos(ar) * 82, 250 + Math.sin(ar) * 82); }
+      o += bow(280, 330, 40);
+      if (v === 2) o = mirror(o);
+      return s + o + (v2 ? star(160, 380, 34) + star(450, 450, 28) : heart(160, 400, 60) + heart(460, 470, 50));
+    }
+    if (type === 3) { // ice cream cone
+      const L = t => [220 + 80 * t, 330 + 230 * t], R = t => [380 - 80 * t, 330 + 230 * t];
+      let o = path('M220,330 L380,330 L300,560 Z');
+      for (const [a, b] of [[0, 0.35], [0.25, 0.6], [0.5, 0.85]]) { o += line(...L(a), ...R(b)) + line(...R(a), ...L(b)); }
+      const scoop = (cy, R0) => { let d = `M${300 - R0},${cy + 12} A${R0} ${R0} 0 1 1 ${300 + R0},${cy + 12}`; const n = 5, sw = 2 * R0 / n; for (let k = 0; k < n; k++) { const xa = 300 + R0 - k * sw, xb = xa - sw, Ld = k % 2 ? 10 : 26; d += ` C${f(xa)},${f(cy + 12 + Ld * 1.3)} ${f(xb)},${f(cy + 12 + Ld * 1.3)} ${f(xb)},${cy + 12}`; } return path(d + ' Z'); };
+      const nS = v + 1, cys = [[290], [300, 205], [305, 220, 140]][v], rs = [[95], [88, 78], [84, 74, 64]][v];
+      for (let k = 0; k < nS; k++) o += scoop(cys[k], rs[k]);
+      const topY = cys[nS - 1] - rs[nS - 1];
+      if (faceOn) o += face(300, cys[0] - 10, 70);
+      if (nS < 3) o += circle(300, topY - 14, 22) + curve(`M300,${topY - 34} Q306,${topY - 60} 326,${topY - 68}`);
+      else o += star(300, topY - 6, 26);
+      return s + o;
+    }
+    if (type === 4) { // ice block
+      let o = rect(280, 400, 40, 150, 20) + path('M210,430 L210,190 A90 90 0 0 1 390,190 L390,430 Z');
+      if (v === 0) for (const y of [250, 320, 380]) o += line(210, y, 390, y);
+      if (v === 1) o += line(210, 330, 390, 250);
+      if (v === 2) for (const [x, y] of [[255, 200], [340, 230], [260, 300], [345, 330], [290, 390]]) o += circle(x, y, 16);
+      if (faceOn) o += `<g>${face(300, 230, 80)}</g>`.replace(/<path d="M[^"]*Q[^"]*" fill="none" stroke-width="5"\/>/, m => m);
+      return s + o + (v2 ? path('M240,135 Q300,95 360,135') : '');
+    }
+    if (type === 5) { // gumball machine
+      let o = path('M220,420 L380,420 L400,560 L200,560 Z') + rect(270, 470, 60, 40, 10) + rect(240, 545, 120, 24, 8);
+      o += rect(265, 40, 70, 36, 10) + circle(300, 34, 16);
+      o += circle(300, 250, 175);
+      for (let y = 140; y <= 380; y += 52) for (let x = 160; x <= 440; x += 52) { const dx = x + ((y / 52) % 2) * 26 - 300, dy = y - 250; if (Math.hypot(dx, dy) < 140) o += v === 1 ? star(x + ((y / 52) % 2) * 26, y, 20) : v === 2 ? heart(x + ((y / 52) % 2) * 26, y, 40) : circle(x + ((y / 52) % 2) * 26, y, 22); }
+      return s + o + (faceOn ? '' : '') + path('M200,420 Q300,446 400,420 L400,410 Q300,436 200,410 Z');
+    }
+    if (type === 6) { // jar of lollies
+      let o = rect(200, 110, 200, 40, 12) + path('M215,150 L385,150 Q445,170 445,260 L445,500 Q445,550 395,550 L205,550 Q155,550 155,500 L155,260 Q155,170 215,150 Z');
+      const items = [[230, 480], [300, 490], [370, 480], [210, 410], [280, 420], [360, 410], [230, 340], [310, 350], [380, 330], [270, 270], [340, 270]];
+      items.forEach(([x, y], k) => { const kk = (k + v) % 4; o += kk === 0 ? circle(x, y, 26) : kk === 1 ? heart(x, y, 54) : kk === 2 ? star(x, y, 28) : ell(x, y, 30, 18, 20); });
+      if (faceOn) o += rect(240, 190, 120, 50, 10);
+      return s + o + bow(300, 150, 34);
+    }
+    if (type === 7) { // macarons
+      const mac = (cy, w) => rect(300 - w, cy + 6, 2 * w, 44, 22) + path(`M${300 - w},${cy - 2} Q${300 - w},${cy - 58} 300,${cy - 58} Q${300 + w},${cy - 58} ${300 + w},${cy - 2} Z`) +
+        path(`M${300 - w + 6},${cy - 10} L${300 + w - 6},${cy - 10} ` + bumpyD([[300 + w - 6, cy + 12], [300 + w / 2, cy + 12], [300, cy + 12], [300 - w / 2, cy + 12], [300 - w + 6, cy + 12]], false).replace('M', 'L') + ' Z');
+      let o = mac(480, 150) + mac(365, 130) + mac(250, 110);
+      if (faceOn) o += face(300, 222, 60, false);
+      return s + o + (v === 0 ? heart(300, 160, 56) : v === 1 ? star(300, 162, 28) : circle(300, 172, 18));
+    }
+    // cotton candy
+    let o = path('M265,330 L335,330 L310,560 L290,560 Z') + line(276, 400, 323, 380) + line(282, 470, 318, 455);
+    o += path(bumpyD([[170, 320], [150, 250], [170, 180], [220, 130], [290, 110], [360, 125], [420, 170], [445, 240], [430, 315]], false) + ' Q300,345 170,320 Z');
+    if (faceOn) o += face(300, 240, 90);
+    else o += curve('M210,250 Q240,215 270,240', 4) + curve('M320,190 Q350,170 380,195', 4) + curve('M330,280 Q360,255 390,275', 4);
+    return s + o + (v2 ? bow(300, 340, 30) : '');
+  }
+
+  /* ---------- ANIMALS ---------- */
+  const ANIMALS = {
+    cat(o) { let s = path('M385,480 C480,490 500,380 455,345 C445,340 432,352 440,362 C470,400 455,455 385,455 Z') + ell(300, 420, 105, 95) + ell(300, 435, 55, 60);
+      s += path('M225,220 L230,135 L288,178 Z') + path('M375,220 L370,135 L312,178 Z') + circle(300, 255, 90) + path('M238,190 L240,158 L265,177 Z', 5) + path('M362,190 L360,158 L335,177 Z', 5);
+      s += dot(265, 250, 11) + shine(268, 246, 3.5) + dot(335, 250, 11) + shine(338, 246, 3.5) + path('M290,272 L310,272 L300,284 Z', 5) + curve('M300,284 Q290,300 278,292 M300,284 Q310,300 322,292');
+      s += line(215, 270, 255, 278, 4) + line(215, 292, 255, 290, 4) + line(385, 270, 345, 278, 4) + line(385, 292, 345, 290, 4) + ell(262, 508, 32, 20) + ell(338, 508, 32, 20);
+      return { s, head: [338, 172, 20] }; },
+    dog(o) { let s = capsule(395, 430, 445, 360, 26) + ell(300, 425, 110, 92) + ell(300, 440, 55, 58) + circle(300, 255, 92);
+      s += ell(212, 275, 34, 64, 15) + ell(388, 275, 34, 64, -15) + ell(332, 230, 26, 22) + ell(300, 290, 48, 34) + ell(300, 272, 17, 12);
+      s += dot(262, 240, 11) + shine(265, 236, 3.5) + dot(334, 232, 9) + shine(337, 228, 3) + curve('M300,284 L300,300 M280,302 Q300,318 320,302');
+      s += path('M292,308 L308,308 L308,322 Q300,332 292,322 Z', 5) + ell(262, 510, 32, 20) + ell(338, 510, 32, 20);
+      return { s, head: [330, 168, 20] }; },
+    bunny(o) { let s = capsule(262, 80, 270, 200, 50) + capsule(338, 80, 330, 200, 50) + capsule(264, 100, 270, 185, 22) + capsule(336, 100, 330, 185, 22);
+      s += circle(400, 450, 30) + ell(300, 430, 100, 90) + ell(300, 445, 52, 55) + circle(300, 260, 85);
+      s += dot(268, 250, 10) + shine(271, 246, 3) + dot(332, 250, 10) + shine(335, 246, 3) + heart(300, 278, 22, 5) + curve('M300,286 Q290,302 280,296 M300,286 Q310,302 320,296') + rect(292, 300, 16, 14, 3, 4);
+      s += circle(255, 285, 10, 4) + circle(345, 285, 10, 4) + ell(250, 515, 44, 22) + ell(350, 515, 44, 22);
+      return { s, head: [345, 190, 20] }; },
+    bear(o) { let s = circle(228, 180, 34) + circle(372, 180, 34) + circle(228, 180, 16) + circle(372, 180, 16) + ell(300, 430, 115, 100) + ell(300, 445, 62, 62);
+      s += ell(205, 410, 30, 50, 20) + ell(395, 410, 30, 50, -20) + circle(300, 255, 92) + ell(300, 285, 44, 32) + ell(300, 272, 16, 11);
+      s += dot(262, 240, 10) + shine(265, 236, 3) + dot(338, 240, 10) + shine(341, 236, 3) + curve('M300,282 L300,294 M284,300 Q300,312 316,300') + ell(250, 515, 40, 26) + ell(350, 515, 40, 26);
+      return { s, head: [325, 166, 20] }; },
+    pig(o) { let s = curve('M405,410 c25,-10 40,10 25,25 c-15,15 -30,-5 -15,-15', 5) + ell(300, 430, 115, 90) + rect(225, 480, 40, 50, 12) + rect(335, 480, 40, 50, 12);
+      s += path('M215,205 L222,150 L262,190 Z') + path('M385,205 L378,150 L338,190 Z') + ell(300, 265, 105, 88) + ell(300, 290, 40, 28) + ell(287, 290, 6, 9, 0, 4) + ell(313, 290, 6, 9, 0, 4);
+      s += dot(258, 250, 10) + shine(261, 246, 3) + dot(342, 250, 10) + shine(345, 246, 3) + curve('M282,328 Q300,340 318,328') + circle(232, 292, 11, 4) + circle(368, 292, 11, 4);
+      return { s, head: [330, 180, 20] }; },
+    owl(o) { let s = ell(180, 340, 50, 100, 15) + ell(420, 340, 50, 100, -15) + path('M190,190 L205,120 L250,170 Z') + path('M410,190 L395,120 L350,170 Z') + ell(300, 330, 130, 160) + ell(300, 390, 80, 90);
+      s += circle(250, 265, 48) + circle(350, 265, 48) + dot(255, 265, 16) + shine(260, 258, 5) + dot(345, 265, 16) + shine(350, 258, 5) + path('M286,300 L314,300 L300,326 Z');
+      s += curve('M265,370 q10,10 20,0 M315,370 q10,10 20,0 M290,410 q10,10 20,0') + capsule(80, 500, 520, 500, 30) + ell(265, 492, 22, 12) + ell(335, 492, 22, 12) + ell(470, 470, 30, 14, -20);
+      return { s, head: [345, 175, 20] }; },
+    fish(o) { let s = path('M180,300 L70,210 Q100,300 70,390 Z') + path('M260,215 Q320,130 380,215 Z') + path('M290,385 Q330,450 360,385 Z') + ell(300, 300, 150, 100);
+      const yy = 100 * Math.sqrt(1 - ((370 - 300) / 150) ** 2);
+      s += curve(`M370,${f(300 - yy)} Q340,300 370,${f(300 + yy)}`) + circle(400, 280, 22) + dot(405, 280, 10) + shine(408, 276, 3) + curve('M430,320 Q442,328 448,318');
+      s += curve('M230,270 q15,15 30,0 M230,320 q15,15 30,0 M280,250 q15,15 30,0 M280,300 q15,15 30,0 M280,350 q15,15 30,0', 4);
+      return { s, head: [380, 205, 16] }; },
+    turtle(o) { let s = ell(190, 400, 34, 22) + ell(410, 400, 34, 22) + path('M150,370 L118,380 L152,390 Z') + capsule(420, 350, 470, 330, 40) + circle(485, 315, 45);
+      s += dot(495, 305, 8) + shine(497, 302, 2.5) + curve('M488,330 Q500,340 512,328') + path('M170,380 A135 125 0 0 1 440,380 Z');
+      const hx = [[270, 300], [330, 300], [350, 340], [330, 375], [270, 375], [250, 340]];
+      s += path(poly(hx)); for (const [a, b, ang] of [[0, 1, 255], [1, 2, 300], [3, 4, 0], [4, 5, 210]]) { }
+      s += line(270, 300, 240, 268) + line(330, 300, 360, 268) + line(250, 340, 180, 345) + line(350, 340, 425, 345);
+      s += rect(155, 372, 300, 26, 13);
+      return { s, head: [490, 270, 14] }; },
+    butterfly(o) { let s = ell(215, 380, 80, 62, 25) + ell(385, 380, 80, 62, -25) + ell(200, 235, 110, 82, -20) + ell(400, 235, 110, 82, 20);
+      s += circle(190, 225, 30) + circle(410, 225, 30) + circle(215, 385, 20) + circle(385, 385, 20) + capsule(300, 210, 300, 440, 32) + circle(300, 180, 34);
+      s += face(300, 180, 40, false) + curve('M290,150 Q270,100 245,95 M310,150 Q330,100 355,95') + circle(242, 94, 10) + circle(358, 94, 10);
+      return { s, head: [320, 150, 0] }; },
+    ladybug(o) { let s = ''; for (const [a, b, c, d] of [[180, 300, 130, 280], [170, 380, 120, 390], [190, 450, 140, 480], [420, 300, 470, 280], [430, 380, 480, 390], [410, 450, 460, 480]]) s += capsule(a, b, c, d, 14);
+      s += circle(300, 345, 150) + line(300, 195, 300, 495);
+      for (const [x, y, rr] of [[240, 280, 26], [220, 370, 22], [250, 440, 24], [360, 280, 26], [380, 370, 22], [350, 440, 24]]) s += circle(x, y, rr);
+      s += curve('M280,145 Q265,95 240,90 M320,145 Q335,95 360,90') + circle(238, 88, 11) + circle(362, 88, 11) + circle(300, 195, 70) + face(300, 190, 55);
+      return { s, head: [330, 140, 18] }; },
+    duck(o) { let s = path('M160,390 C150,320 200,300 280,320 L420,330 C470,350 470,460 380,480 L240,480 C180,470 160,440 160,390 Z M160,390 L120,340 L175,345 Z');
+      s += path('M215,380 C230,340 300,340 330,380 C300,430 240,430 215,380 Z') + circle(380, 245, 72) + path('M440,250 Q500,240 510,262 Q480,285 440,278 Z') + line(444, 264, 505, 262, 4);
+      s += dot(398, 230, 10) + shine(401, 226, 3) + circle(420, 268, 9, 4);
+      return { s, head: [390, 172, 18] }; },
+    frog(o) { let s = ell(300, 545, 210, 40) + ell(300, 430, 110, 78) + ell(215, 495, 46, 22) + ell(385, 495, 46, 22) + circle(230, 215, 46) + circle(370, 215, 46) + ell(300, 300, 140, 95);
+      s += circle(230, 212, 24) + dot(234, 212, 11) + shine(237, 208, 3) + circle(370, 212, 24) + dot(374, 212, 11) + shine(377, 208, 3);
+      s += curve('M220,320 Q300,370 380,320') + circle(205, 315, 13, 4) + circle(395, 315, 13, 4) + ell(300, 440, 55, 45);
+      return { s, head: [370, 168, 18] }; },
+    penguin(o) { let s = ell(178, 340, 30, 85, 20) + ell(422, 340, 30, 85, -20) + ell(255, 505, 38, 18) + ell(345, 505, 38, 18) + ell(300, 320, 125, 175) + ell(300, 380, 85, 105) + ell(300, 235, 75, 58);
+      s += dot(272, 228, 9) + shine(275, 224, 3) + dot(328, 228, 9) + shine(331, 224, 3) + path('M286,250 L314,250 L300,270 Z') + circle(255, 258, 9, 4) + circle(345, 258, 9, 4);
+      if (o.scarf) s += path('M215,300 Q300,330 385,300 L385,330 Q300,360 215,330 Z') + path('M340,330 L370,330 L380,400 L345,400 Z');
+      return { s, head: [330, 150, 18] }; },
+    elephant(o) { let s = ell(300, 460, 125, 80) + rect(210, 470, 55, 70, 16) + rect(335, 470, 55, 70, 16) + ell(175, 270, 80, 100) + ell(425, 270, 80, 100) + ell(180, 275, 50, 65) + ell(420, 275, 50, 65) + circle(300, 265, 105);
+      s += path('M272,300 C268,380 248,430 290,452 C312,462 334,446 322,428 C302,420 322,380 328,300 Z') + dot(262, 245, 10) + shine(265, 241, 3) + dot(338, 245, 10) + shine(341, 241, 3);
+      s += curve('M268,300 Q252,322 260,340') + circle(238, 290, 11, 4) + circle(362, 290, 11, 4);
+      return { s, head: [330, 165, 20] }; },
+    mouse(o) { let s = curve('M390,470 C470,480 500,420 470,380 C450,355 480,330 500,345', 5) + ell(300, 430, 100, 85) + ell(300, 445, 50, 50) + circle(220, 175, 55) + circle(380, 175, 55) + circle(220, 175, 32) + circle(380, 175, 32) + circle(300, 260, 82);
+      s += dot(270, 250, 10) + shine(273, 246, 3) + dot(330, 250, 10) + shine(333, 246, 3) + circle(300, 280, 13) + curve('M285,298 Q300,310 315,298') + line(225, 278, 265, 284, 4) + line(375, 278, 335, 284, 4) + ell(255, 508, 34, 18) + ell(345, 508, 34, 18);
+      return { s, head: [300, 175, 0] }; },
+    lion(o) { let s = curve('M395,470 C460,480 480,420 470,390', 7) + circle(472, 380, 18) + ell(300, 440, 105, 85) + ell(260, 515, 34, 18) + ell(340, 515, 34, 18);
+      const pts = []; for (let k = 0; k <= 14; k++) { const a = -Math.PI / 2 + Math.PI * 2 * k / 14; pts.push([300 + Math.cos(a) * 125, 255 + Math.sin(a) * 125]); }
+      s += path(bumpyD(pts)) + circle(235, 175, 22) + circle(365, 175, 22) + circle(300, 255, 85) + ell(300, 290, 40, 28) + path('M286,272 L314,272 L300,286 Z', 5);
+      s += dot(268, 245, 10) + shine(271, 241, 3) + dot(332, 245, 10) + shine(335, 241, 3) + curve('M300,286 L300,298 M286,304 Q300,314 314,304');
+      return { s, head: [300, 140, 0] }; },
+    snail(o) { let s = path('M110,500 Q100,460 150,455 L380,455 C420,455 430,420 430,380 L430,300 C430,270 470,270 470,300 L470,430 C470,500 440,510 400,510 L140,510 Q110,510 110,500 Z');
+      s += curve('M440,280 Q430,230 410,215 M460,280 Q470,230 492,215') + circle(408, 212, 11) + circle(494, 212, 11) + dot(442, 310, 7) + dot(462, 310, 7) + curve('M440,335 Q452,345 464,335', 4);
+      s += circle(280, 350, 120); let d = 'M280,350'; for (let a = 0; a <= Math.PI * 5.5; a += 0.25) { const rr = 120 * a / (Math.PI * 5.5); d += ` L${f(280 + Math.cos(a) * rr)},${f(350 + Math.sin(a) * rr)}`; } s += curve(d);
+      return { s, head: [280, 230, 0] }; },
+    bee(o) { let s = ell(250, 210, 60, 90, -25) + ell(350, 210, 60, 90, 25) + path('M140,340 L95,330 L140,320 Z') + ell(290, 330, 150, 105);
+      for (const x of [220, 290, 360]) { const yy = 105 * Math.sqrt(1 - ((x - 290) / 150) ** 2) - 2; s += curve(`M${x},${f(330 - yy)} Q${x + 20},330 ${x},${f(330 + yy)}`); }
+      s += circle(440, 300, 70) + face(445, 300, 55) + curve('M430,235 Q420,190 395,180 M460,235 Q475,190 500,180') + circle(393, 178, 11) + circle(502, 178, 11);
+      return { s, head: [470, 238, 18] }; },
+    octopus(o) { let s = '';
+      for (const [x, dx] of [[200, -60], [240, -30], [280, -10], [320, 10], [360, 30], [400, 60]]) s += path(`M${x - 22},300 C${x - 22 + dx * 0.5},400 ${x + dx - 30},440 ${x + dx},500 C${x + dx + 20},520 ${x + dx + 40},500 ${x + dx + 20},485 C${x + dx * 0.4 + 20},430 ${x + 22},400 ${x + 22},300 Z`);
+      s += ell(300, 240, 140, 130) + face(300, 260, 100) + circle(240, 180, 14, 4) + circle(350, 165, 10, 4) + circle(380, 205, 8, 4);
+      return { s, head: [330, 115, 15] }; },
+    chick(o) { let s = circle(300, 250, 95) + path('M220,290 Q190,330 210,350 L230,320 Z') + path('M380,290 Q410,330 390,350 L370,320 Z');
+      s += path('M180,330 L215,360 L250,325 L285,360 L320,325 L355,360 L390,325 L420,330 C430,450 380,520 300,520 C220,520 170,450 180,330 Z');
+      s += dot(268, 240, 10) + shine(271, 236, 3) + dot(332, 240, 10) + shine(335, 236, 3) + path('M285,262 L315,262 L300,284 Z') + circle(250, 275, 11, 4) + circle(350, 275, 11, 4) + path('M290,160 Q285,130 300,125 Q300,145 312,140 Q310,160 300,160 Z', 5);
+      s += curve('M240,420 L260,440 L285,415 M330,450 L350,430 L370,455', 4);
+      return { s, head: [335, 162, 20] }; },
+    whale(o) { let s = path('M110,300 L60,240 Q80,300 70,330 Q60,360 60,370 L110,330 Z') + path('M100,320 C110,200 260,180 360,200 C470,220 520,300 500,360 C480,430 380,450 280,440 C180,430 100,400 100,320 Z');
+      s += path('M140,360 C220,420 400,430 490,370 C470,420 380,445 280,440 C200,435 150,400 140,360 Z') + dot(410, 290, 10) + shine(413, 286, 3) + curve('M430,330 Q455,345 475,325') + circle(440, 320, 10, 4);
+      s += path('M330,190 Q320,140 300,120 Q330,130 335,160 Q345,125 375,118 Q350,140 345,190 Z');
+      for (let k = 0; k < 3; k++) s += line(200 + k * 40, 405 + k * 8, 210 + k * 40, 425 + k * 6, 4);
+      return { s, head: [420, 215, 15] }; },
+  };
+  const ANIMAL_LIST = Object.keys(ANIMALS);
+  const HABITAT = { fish: 'sea', octopus: 'sea', whale: 'sea', turtle: 'sea', duck: 'pond', frog: 'pond', penguin: 'snow' };
+  function animal(i) {
+    const [a, acc, bgk] = combo(i, [ANIMAL_LIST.length, 5, 4]);
+    const r = rng(5000 + i), name = ANIMAL_LIST[a];
+    const out = ANIMALS[name]({ scarf: acc === 4 });
+    const bgName = HABITAT[name] || ['garden', 'hearts', 'butterflies', 'sparkle'][bgk];
+    let s = background(bgName, r) + out.s;
+    const [hx, hy, rot] = out.head;
+    if (acc === 0) s += bow(hx, hy, 34, rot);
+    if (acc === 1) s += flower(hx, hy, 44, 5, 10);
+    if (acc === 2 && !['ladybug', 'butterfly', 'snail'].includes(name)) s += partyHat(hx - 8, hy + 12, 70, rot);
+    if (acc === 3) s += littleCrown(hx - 6, hy + 12, 72, rot);
+    return s;
+  }
+
+  /* ---------- catalogue ---------- */
+  const CATS = [
+    { id: 'princess', name: 'Princesses', count: 160, make: princess, color: '#ff8fc6' },
+    { id: 'unicorn', name: 'Unicorns', count: 160, make: unicorn, color: '#b98cff' },
+    { id: 'cake', name: 'Cakes', count: 160, make: cake, color: '#ffb36b' },
+    { id: 'lolly', name: 'Lollies', count: 160, make: lolly, color: '#5fd3c4' },
+    { id: 'animal', name: 'Animals', count: 160, make: animal, color: '#8fd16a' },
+  ];
+  function svg(cat, i) {
+    const c = CATS.find(c => c.id === cat);
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#fff"/><g fill="#fff" stroke="#000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">${c.make(i)}</g></svg>`;
+  }
+  return { CATS, svg };
+})();
+
+</script>
+<script>
+(() => {
+'use strict';
+const VERSION = 'v1.0';
+const N = 1200;                 // canvas size (pixels) for colouring
+const $ = id => document.getElementById(id);
+$('ver').textContent = VERSION;
+
+/* ===== storage: saved pictures live in IndexedDB on this device ===== */
+const DB = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res) => {
+    try { const r = indexedDB.open('colouring-book', 1); r.onupgradeneeded = () => r.result.createObjectStore('pics'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
+  }));
+  const tx = async (mode, fn) => { const db = await open(); if (!db) return null; return new Promise(res => { try { const t = db.transaction('pics', mode), st = t.objectStore('pics'); const q = fn(st); t.oncomplete = () => res(q && q.result); t.onerror = () => res(null); } catch (e) { res(null); } }); };
+  return {
+    get: k => tx('readonly', st => st.get(k)),
+    put: (k, v) => tx('readwrite', st => st.put(v, k)),
+    del: k => tx('readwrite', st => st.delete(k)),
+    all: () => new Promise(async res => { const db = await open(); if (!db) return res([]); const out = []; try { const c = db.transaction('pics').objectStore('pics').openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push([cur.key, cur.value]); cur.continue(); } else res(out); }; c.onerror = () => res(out); } catch (e) { res(out); } }),
+  };
+})();
+let thumbsCache = new Map(); // key -> thumb dataURL
+async function loadThumbs() { const all = await DB.all(); thumbsCache = new Map(all.map(([k, v]) => [k, v.thumb])); thumbsCache.times = new Map(all.map(([k, v]) => [k, v.t])); }
+
+/* ===== screens ===== */
+const show = id => { for (const s of ['home', 'grid', 'paint']) $(s).hidden = s !== id; };
+const svgURL = (cat, i) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ART.svg(cat, i));
+
+const TITLE = 'My Colouring Book', TITLE_COLS = ['#ff4d6d', '#ff8a3d', '#f5b700', '#35c46a', '#20b2d6', '#3b8cff', '#8a5cff', '#e040fb'];
+$('title').innerHTML = [...TITLE].map((ch, k) => ch === ' ' ? ' ' : `<span style="color:${TITLE_COLS[k % TITLE_COLS.length]};animation-delay:${k * 0.12}s">${ch}</span>`).join('');
+
+function renderHome() {
+  const cats = $('cats'); cats.innerHTML = '';
+  const tiles = [...ART.CATS.map(c => ({ ...c, cover: svgURL(c.id, 0) })), { id: 'mine', name: 'My Pictures', color: '#ffc61a' }];
+  for (const c of tiles) {
+    const b = document.createElement('button'); b.className = 'cat'; b.style.setProperty('--c', c.color);
+    let cover = c.cover;
+    if (c.id === 'mine') { const latest = [...(thumbsCache.times || new Map())].sort((a, b) => b[1] - a[1])[0]; cover = latest ? thumbsCache.get(latest[0]) : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 8l12 26 28 3-21 19 6 28-25-14-25 14 6-28-21-19 28-3z" fill="#ffd84d" stroke="#b37b00" stroke-width="4" stroke-linejoin="round"/></svg>'); }
+    b.innerHTML = `<div class="pic"><img alt="" src="${cover}"></div><b>${c.name}</b>`;
+    b.onclick = () => openGrid(c.id);
+    cats.appendChild(b);
+  }
+}
+
+let currentGrid = null;
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { for (const e of es) if (e.isIntersecting) { const img = e.target; img.src = img.dataset.src; io.unobserve(img); } }, { root: $('thumbs'), rootMargin: '400px' }) : null;
+function openGrid(catId) {
+  currentGrid = catId;
+  const scroller = $('thumbs'); scroller.innerHTML = ''; scroller.scrollTop = 0;
+  const box = document.createElement('div'); box.className = 'tgrid'; scroller.appendChild(box);
+  const cat = ART.CATS.find(c => c.id === catId);
+  $('gridTitle').textContent = cat ? cat.name : 'My Pictures';
+  scroller.style.setProperty('--c', cat ? cat.color : '#ffc61a');
+  let items;
+  if (cat) items = Array.from({ length: cat.count }, (_, i) => [catId, i]);
+  else items = [...(thumbsCache.times || new Map())].sort((a, b) => b[1] - a[1]).map(([k]) => { const [c, i] = k.split(':'); return [c, +i]; });
+  if (!items.length) box.innerHTML = '<div class="empty">⭐ Colour a picture and press the tick to keep it here ⭐</div>';
+  for (const [c, i] of items) {
+    const key = c + ':' + i, b = document.createElement('button'), img = document.createElement('img');
+    b.className = 'thumb' + (thumbsCache.has(key) ? ' done' : ''); img.alt = '';
+    const src = thumbsCache.get(key) || svgURL(c, i);
+    if (io) { img.dataset.src = src; io.observe(img); } else img.src = src;
+    b.appendChild(img); b.onclick = () => openPaint(c, i); box.appendChild(b);
+  }
+  show('grid');
+}
+$('backHome').onclick = () => { renderHome(); show('home'); };
+
+/* ===== colours ===== */
+const PLAIN = ['#e6194b', '#ff4d4d', '#ff6f61', '#ff8a3d', '#ffa94d', '#ffc61a', '#fff200', '#fff5a8', '#c6e84d', '#7ed957', '#35c46a', '#138a4a', '#c9f2c9', '#00c9a7', '#20b2d6', '#b5e8ff', '#3fd0ff', '#3b8cff', '#2346d6', '#d9c2ff', '#b266ff', '#8a5cff', '#5b2bb5', '#e040fb', '#ff4fb4', '#ff8fc8', '#ffc2e0', '#ffd9c7', '#f2c29b', '#d9a066', '#a8683c', '#6b3e1f', '#d4d4d4', '#9e9e9e', '#4d4d4d', '#000000', '#ffffff'];
+const MAGIC = [
+  { id: 'rainbow', type: 'rainbow', sat: 95, light: 55 },
+  { id: 'pastel', type: 'rainbow', sat: 90, light: 78 },
+  { id: 'g-pink', type: 'glitter', base: '#ff6ec4', spark: ['#fff', '#ffd1ee', '#ff2fa3'] },
+  { id: 'g-purple', type: 'glitter', base: '#a35cff', spark: ['#fff', '#e3cfff', '#6a1fd6'] },
+  { id: 'g-blue', type: 'glitter', base: '#4aa8ff', spark: ['#fff', '#cbe8ff', '#1563d1'] },
+  { id: 'g-green', type: 'glitter', base: '#45d07a', spark: ['#fff', '#d2ffd9', '#11883e'] },
+  { id: 'g-gold', type: 'glitter', base: '#f2b705', spark: ['#fff8d1', '#fff', '#b07a00'] },
+  { id: 'g-silver', type: 'glitter', base: '#c4c9d4', spark: ['#fff', '#eef2f8', '#7c8494'] },
+  { id: 'g-red', type: 'glitter', base: '#ff3b4f', spark: ['#fff', '#ffc2c8', '#b3001b'] },
+  { id: 'g-rainbow', type: 'glitter', base: '#fff0fb', spark: ['#ff4d6d', '#ffc61a', '#35c46a', '#3b8cff', '#b266ff', '#ff8fc8'] },
+  { id: 'f-pink', type: 'fluoro', c: '#ff2bd6' }, { id: 'f-green', type: 'fluoro', c: '#39ff14' },
+  { id: 'f-yellow', type: 'fluoro', c: '#f4ff1f' }, { id: 'f-orange', type: 'fluoro', c: '#ff7a00' },
+  { id: 'f-blue', type: 'fluoro', c: '#00e5ff' }, { id: 'f-purple', type: 'fluoro', c: '#b026ff' },
+  { id: 'gold', type: 'metal', stops: ['#8a5a00', '#ffd76a', '#fff3c4', '#e0a800', '#8a5a00'] },
+  { id: 'silver', type: 'metal', stops: ['#6e7480', '#e9edf3', '#ffffff', '#aeb4bf', '#6e7480'] },
+  { id: 'rose', type: 'metal', stops: ['#a8515c', '#ffc7c0', '#fff0ee', '#e78f8f', '#a8515c'] },
+  { id: 'stars', type: 'stars', base: '#c9b6ff', star: '#fff27a' },
+  { id: 'hearts', type: 'stars', base: '#ffc2e0', star: '#ff3d8b', heart: true },
+];
+
+function makeTile(col, size = 96) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d');
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  if (col.type === 'glitter') {
+    x.fillStyle = col.base; x.fillRect(0, 0, size, size);
+    for (let k = 0; k < size * 3.2; k++) { x.fillStyle = col.spark[k % col.spark.length]; x.globalAlpha = .5 + rnd() * .5; const r = .6 + rnd() * 1.8; x.beginPath(); x.arc(rnd() * size, rnd() * size, r, 0, 7); x.fill(); }
+    x.globalAlpha = 1; x.fillStyle = '#fff';
+    for (let k = 0; k < 7; k++) { const px = rnd() * size, py = rnd() * size, r = 3 + rnd() * 4; x.beginPath(); x.moveTo(px, py - r); x.lineTo(px + r * .25, py - r * .25); x.lineTo(px + r, py); x.lineTo(px + r * .25, py + r * .25); x.lineTo(px, py + r); x.lineTo(px - r * .25, py + r * .25); x.lineTo(px - r, py); x.lineTo(px - r * .25, py - r * .25); x.fill(); }
+  } else if (col.type === 'metal') {
+    const g = x.createLinearGradient(0, 0, size, size); col.stops.forEach((s, k) => g.addColorStop(k / (col.stops.length - 1), s)); x.fillStyle = g; x.fillRect(0, 0, size, size);
+    x.globalAlpha = .18; x.fillStyle = '#fff'; for (let k = 0; k < 40; k++) x.fillRect(rnd() * size, rnd() * size, 1.5, 1.5); x.globalAlpha = 1;
+  } else if (col.type === 'stars') {
+    x.fillStyle = col.base; x.fillRect(0, 0, size, size); x.fillStyle = col.star;
+    const pts = [[20, 22], [70, 18], [46, 52], [16, 76], [78, 74]];
+    for (const [px, py] of pts) {
+      const s = size / 96, cx = px * s, cy = py * s, r = 10 * s; x.beginPath();
+      if (col.heart) { x.moveTo(cx, cy + r * .9); x.bezierCurveTo(cx - r * 1.3, cy, cx - r * .6, cy - r * 1.1, cx, cy - r * .35); x.bezierCurveTo(cx + r * .6, cy - r * 1.1, cx + r * 1.3, cy, cx, cy + r * .9); }
+      else for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
+      x.fill();
+    }
+  } else if (col.type === 'pencil') { // grain: speckles to knock out of pencil strokes
+    for (let k = 0; k < size * size * .28; k++) { x.fillStyle = '#000'; x.fillRect(Math.floor(rnd() * size), Math.floor(rnd() * size), 1, 1); }
+  }
+  return c;
+}
+const tileCache = new Map();
+const tileFor = col => { if (!tileCache.has(col.id)) tileCache.set(col.id, makeTile(col)); return tileCache.get(col.id); };
+function swatchBg(col) {
+  if (typeof col === 'string') return col;
+  if (col.type === 'rainbow') return `conic-gradient(${[0, 60, 120, 180, 240, 300, 360].map(h => `hsl(${h} ${col.sat}% ${col.light}%)`).join(',')})`;
+  if (col.type === 'fluoro') return `radial-gradient(circle at 35% 30%, #fff 0 8%, ${col.c} 30%)`;
+  return `url(${tileFor(col).toDataURL()})`;
+}
+const fluoroGlow = col => col.type === 'fluoro' ? `, 0 0 18px ${col.c}` : '';
+
+/* ===== tools ===== */
+const TOOLS = [
+  { id: 'pencil', w: 12, icon: tip => `<svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="25" y="4" width="14" height="40" rx="2" fill="#ffd84d" stroke="#4a2b5e" stroke-width="3"/><rect x="25" y="4" width="14" height="8" rx="2" fill="#ff9ec4" stroke="#4a2b5e" stroke-width="3"/><path d="M25 44h14l-7 15z" fill="#f6d2a8" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M29.4 53.5h5.2L32 59z" fill="${tip}" stroke="#4a2b5e" stroke-width="2" stroke-linejoin="round"/></g></svg>` },
+  { id: 'pen', w: 22, icon: tip => `<svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="24" y="3" width="16" height="38" rx="5" fill="${tip}" stroke="#4a2b5e" stroke-width="3"/><path d="M38 6v18" stroke="#4a2b5e" stroke-width="3" stroke-linecap="round"/><path d="M25 41h14l-4 10h-6z" fill="#e8e3ee" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M29 51h6l-3 8z" fill="${tip}" stroke="#4a2b5e" stroke-width="2.5" stroke-linejoin="round"/></g></svg>` },
+  { id: 'marker', w: 42, icon: tip => `<svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="21" y="3" width="22" height="16" rx="6" fill="${tip}" stroke="#4a2b5e" stroke-width="3"/><rect x="21" y="17" width="22" height="28" rx="4" fill="#fff" stroke="#4a2b5e" stroke-width="3"/><rect x="25" y="22" width="14" height="10" rx="2" fill="${tip}"/><path d="M24 45h16l-2 7H26z" fill="#d9d3e2" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M27 52h10l-2 8h-6z" fill="${tip}" stroke="#4a2b5e" stroke-width="2.5" stroke-linejoin="round"/></g></svg>` },
+  { id: 'brush', w: 76, icon: tip => `<svg viewBox="0 0 64 64"><g transform="rotate(45 32 32)"><rect x="28" y="2" width="8" height="30" rx="4" fill="#c0874a" stroke="#4a2b5e" stroke-width="3"/><rect x="25" y="30" width="14" height="10" rx="2" fill="#d4d7de" stroke="#4a2b5e" stroke-width="3"/><path d="M25 40h14c2 8-1 15-7 21-6-6-9-13-7-21z" fill="${tip}" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/></g></svg>` },
+  { id: 'eraser', w: 60, icon: () => `<svg viewBox="0 0 64 64"><g transform="rotate(-35 32 32)"><rect x="10" y="20" width="44" height="24" rx="6" fill="#ff9ec4" stroke="#4a2b5e" stroke-width="3"/><rect x="10" y="20" width="16" height="24" rx="6" fill="#8ad3ff" stroke="#4a2b5e" stroke-width="3"/></g></svg>` },
+];
+let tool = TOOLS[2], colour = PLAIN[24];
+const tipColour = () => typeof colour === 'string' ? colour : colour.type === 'fluoro' ? colour.c : colour.base || (colour.stops ? colour.stops[1] : '#ff4d6d');
+function renderTools() {
+  const box = $('tools'); box.innerHTML = '';
+  for (const t of TOOLS) {
+    const b = document.createElement('button'); b.className = 'tool' + (t === tool ? ' on' : ''); b.setAttribute('aria-label', t.id);
+    const d = t.id === 'eraser' ? 0 : Math.round(6 + t.w / 4.5);
+    b.innerHTML = t.icon(tipColour()) + (d ? `<span class="size" style="width:${d}px;height:${d}px;background:${tipColour()}"></span>` : '');
+    b.onclick = () => { tool = t; renderTools(); };
+    box.appendChild(b);
+  }
+  const cb = $('colourBtn'); cb.style.background = swatchBg(colour); cb.style.backgroundSize = 'cover';
+  cb.style.boxShadow = `var(--shadow), inset 0 0 0 6px #fff${typeof colour === 'object' ? fluoroGlow(colour) : ''}`;
+}
+
+/* colour drawer */
+let tab = 'plain';
+function renderSwatches() {
+  const box = $('swatches'); box.innerHTML = '';
+  const list = tab === 'plain' ? PLAIN : MAGIC;
+  for (const col of list) {
+    const b = document.createElement('button'); b.className = 'sw' + (col === colour ? ' on' : '') + (col === '#ffffff' || col === '#fff5a8' ? ' light' : '');
+    b.style.background = swatchBg(col); b.style.backgroundSize = 'cover';
+    if (typeof col === 'object' && col.type === 'fluoro') b.style.boxShadow = `0 0 16px ${col.c}, 0 4px 0 rgba(0,0,0,.12)`;
+    b.onclick = () => { colour = col; if (tool.id === 'eraser') tool = TOOLS[2]; b.classList.add('pop', 'on'); renderTools(); setTimeout(closeDrawer, 260); };
+    box.appendChild(b);
+  }
+}
+const openDrawer = () => { renderSwatches(); $('drawer').classList.add('open'); $('scrim').classList.add('open'); };
+const closeDrawer = () => { $('drawer').classList.remove('open'); $('scrim').classList.remove('open'); };
+$('colourBtn').onclick = openDrawer; $('scrim').onclick = closeDrawer;
+for (const t of document.querySelectorAll('.tab')) t.onclick = () => { tab = t.dataset.tab; for (const u of document.querySelectorAll('.tab')) u.classList.toggle('on', u === t); renderSwatches(); };
+$('magicIcon').style.background = `url(${tileFor(MAGIC[9]).toDataURL()}) center/cover`;
+
+/* ===== the colouring canvas ===== */
+const paintCv = $('paintCv'), lineCv = $('lineCv'); paintCv.width = paintCv.height = lineCv.width = lineCv.height = N;
+const pctx = paintCv.getContext('2d', { willReadFrequently: true }), lctx = lineCv.getContext('2d');
+const scratch = document.createElement('canvas'); scratch.width = scratch.height = N; const sctx = scratch.getContext('2d');
+let labels = null, regionBox = [], masks = new Map(), current = null, dirty = false, hadSave = false;
+let undoStack = [], undoBytes = 0;
+const UNDO_MAX = 40, UNDO_BYTES = 160e6;
+
+function fitStage() {
+  const wrap = $('stageWrap'), cs = getComputedStyle(wrap);
+  const w = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), h = wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const s = Math.max(100, Math.floor(Math.min(w, h))); $('stage').style.width = $('stage').style.height = s + 'px';
+}
+addEventListener('resize', () => { if (!$('paint').hidden) fitStage(); });
+
+function loadImage(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
+
+async function openPaint(cat, i) {
+  current = { cat, i, key: cat + ':' + i }; dirty = false; undoStack = []; undoBytes = 0; masks = new Map(); updateUndo();
+  show('paint'); fitStage(); $('loading').hidden = false; renderTools();
+  pctx.clearRect(0, 0, N, N); lctx.clearRect(0, 0, N, N);
+  const svg = ART.svg(cat, i).replace('width="600" height="600"', `width="${N}" height="${N}"`);
+  const im = await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+  const tmp = document.createElement('canvas'); tmp.width = tmp.height = N; const tctx = tmp.getContext('2d', { willReadFrequently: true });
+  tctx.fillStyle = '#fff'; tctx.fillRect(0, 0, N, N); tctx.drawImage(im, 0, 0, N, N);
+  const src = tctx.getImageData(0, 0, N, N).data;
+  // line layer: dark pixels become the black outline that always sits on top
+  const lineImg = lctx.createImageData(N, N), ld = lineImg.data, isLine = new Uint8Array(N * N);
+  for (let p = 0, q = 0; p < N * N; p++, q += 4) {
+    const lum = (src[q] * 3 + src[q + 1] * 4 + src[q + 2]) >> 3;
+    const a = Math.min(255, (255 - lum) * 1.25); ld[q + 3] = a; // rgb stays 0 (black)
+    if (lum < 170) isLine[p] = 1;
+  }
+  lctx.putImageData(lineImg, 0, 0);
+  // label every enclosed area
+  labels = new Int32Array(N * N); regionBox = [null];
+  const stack = new Int32Array(N * N); let id = 0;
+  for (let p = 0; p < N * N; p++) {
+    if (isLine[p] || labels[p]) continue;
+    id++; let sp = 0; stack[sp++] = p; labels[p] = id; let x0 = N, y0 = N, x1 = 0, y1 = 0;
+    while (sp) {
+      const c = stack[--sp], x = c % N, y = (c - x) / N;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (x > 0 && !isLine[c - 1] && !labels[c - 1]) { labels[c - 1] = id; stack[sp++] = c - 1; }
+      if (x < N - 1 && !isLine[c + 1] && !labels[c + 1]) { labels[c + 1] = id; stack[sp++] = c + 1; }
+      if (y > 0 && !isLine[c - N] && !labels[c - N]) { labels[c - N] = id; stack[sp++] = c - N; }
+      if (y < N - 1 && !isLine[c + N] && !labels[c + N]) { labels[c + N] = id; stack[sp++] = c + N; }
+    }
+    regionBox[id] = [x0, y0, x1, y1];
+  }
+  // previously saved colouring
+  const saved = await DB.get(current.key); hadSave = !!saved;
+  if (saved && saved.paint) { try { pctx.drawImage(await loadImage(saved.paint), 0, 0, N, N); } catch (e) {} }
+  $('loading').hidden = true;
+}
+
+const DIL = 4; // colour tucks slightly under the outline so no white gaps show
+function maskFor(id) {
+  if (masks.has(id)) return masks.get(id);
+  const [bx0, by0, bx1, by1] = regionBox[id];
+  const x0 = Math.max(0, bx0 - DIL), y0 = Math.max(0, by0 - DIL), x1 = Math.min(N - 1, bx1 + DIL), y1 = Math.min(N - 1, by1 + DIL);
+  const w = x1 - x0 + 1, h = y1 - y0 + 1; let m = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) { const row = (y + y0) * N + x0; for (let x = 0; x < w; x++) if (labels[row + x] === id) m[y * w + x] = 1; }
+  for (let k = 0; k < DIL; k++) {
+    const n = m.slice();
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = y * w + x; if (m[i] || labels[(y + y0) * N + x + x0] !== 0) continue;
+      if ((x > 0 && m[i - 1]) || (x < w - 1 && m[i + 1]) || (y > 0 && m[i - w]) || (y < h - 1 && m[i + w])) n[i] = 1;
+    }
+    m = n;
+  }
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const cx = c.getContext('2d'); const img = cx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) if (m[i]) img.data[i * 4 + 3] = 255;
+  cx.putImageData(img, 0, 0);
+  const out = { c, x: x0, y: y0, w, h };
+  if (masks.size > 40) masks.delete(masks.keys().next().value);
+  masks.set(id, out); return out;
+}
+function regionAt(x, y) {
+  x = Math.round(x); y = Math.round(y); if (x < 0 || y < 0 || x >= N || y >= N) return 0;
+  if (labels[y * N + x]) return labels[y * N + x];
+  for (let r = 2; r <= 24; r += 2) for (let a = 0; a < 16; a++) { // finger landed on a line: use the nearest area
+    const xx = Math.round(x + Math.cos(a * Math.PI / 8) * r), yy = Math.round(y + Math.sin(a * Math.PI / 8) * r);
+    if (xx >= 0 && yy >= 0 && xx < N && yy < N && labels[yy * N + xx]) return labels[yy * N + xx];
+  }
+  return 0;
+}
+
+/* undo */
+function pushUndo(x, y, w, h) {
+  const data = pctx.getImageData(x, y, w, h); undoStack.push({ x, y, data }); undoBytes += w * h * 4;
+  while (undoStack.length > UNDO_MAX || (undoBytes > UNDO_BYTES && undoStack.length > 1)) { const o = undoStack.shift(); undoBytes -= o.data.width * o.data.height * 4; }
+  updateUndo();
+}
+function updateUndo() { $('undoBtn').disabled = !undoStack.length; }
+$('undoBtn').onclick = () => { const o = undoStack.pop(); if (!o) return; undoBytes -= o.data.width * o.data.height * 4; pctx.putImageData(o.data, o.x, o.y); dirty = true; updateUndo(); };
+
+/* strokes */
+let stroke = null;
+const grain = makeTile({ type: 'pencil' }, 64);
+function styleFor(len) {
+  const c = colour;
+  if (typeof c === 'string') return { fill: c };
+  if (c.type === 'rainbow') return { fill: `hsl(${(len * 0.35) % 360} ${c.sat}% ${c.light}%)` };
+  if (c.type === 'fluoro') return { fill: c.c, glow: c.c };
+  return { fill: sctx.createPattern(tileFor(c), 'repeat') };
+}
+function segment(ax, ay, bx, by) {
+  const w = tool.w, m = stroke.mask, pad = w / 2 + 20;
+  let x0 = Math.floor(Math.max(m.x, Math.min(ax, bx) - pad)), y0 = Math.floor(Math.max(m.y, Math.min(ay, by) - pad));
+  let x1 = Math.ceil(Math.min(m.x + m.w, Math.max(ax, bx) + pad)), y1 = Math.ceil(Math.min(m.y + m.h, Math.max(ay, by) + pad));
+  if (x1 <= x0 || y1 <= y0) return;
+  const bw = x1 - x0, bh = y1 - y0;
+  sctx.clearRect(x0, y0, bw, bh);
+  sctx.save(); sctx.beginPath(); sctx.rect(x0, y0, bw, bh); sctx.clip();
+  const st = tool.id === 'eraser' ? { fill: '#000' } : styleFor(stroke.len);
+  sctx.strokeStyle = st.fill; sctx.lineWidth = w; sctx.lineCap = 'round'; sctx.lineJoin = 'round';
+  if (st.glow) { sctx.shadowColor = st.glow; sctx.shadowBlur = 16; }
+  sctx.beginPath(); sctx.moveTo(ax, ay); sctx.lineTo(bx + (ax === bx && ay === by ? 0.01 : 0), by); sctx.stroke();
+  sctx.shadowBlur = 0;
+  if (tool.id === 'pencil') { sctx.globalCompositeOperation = 'destination-out'; sctx.fillStyle = sctx.createPattern(grain, 'repeat'); sctx.fillRect(x0, y0, bw, bh); }
+  sctx.globalCompositeOperation = 'destination-in';
+  sctx.drawImage(m.c, x0 - m.x, y0 - m.y, bw, bh, x0, y0, bw, bh);
+  sctx.restore();
+  pctx.globalCompositeOperation = tool.id === 'eraser' ? 'destination-out' : 'source-over';
+  pctx.drawImage(scratch, x0, y0, bw, bh, x0, y0, bw, bh);
+  pctx.globalCompositeOperation = 'source-over';
+  if (colour.type === 'stars' && tool.id !== 'eraser') { /* pattern already includes the stars */ }
+}
+function toCanvas(e) { const r = paintCv.getBoundingClientRect(); return [(e.clientX - r.left) * N / r.width, (e.clientY - r.top) * N / r.height]; }
+const stage = $('stage');
+stage.addEventListener('pointerdown', e => {
+  if (stroke || !labels || !$('loading').hidden) return;
+  e.preventDefault();
+  const [x, y] = toCanvas(e), id = regionAt(x, y); if (!id) return;
+  const mask = maskFor(id);
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  pushUndo(mask.x, mask.y, mask.w, mask.h);
+  stroke = { pid: e.pointerId, mask, x, y, len: 0 };
+  segment(x, y, x, y); dirty = true;
+});
+stage.addEventListener('pointermove', e => {
+  if (!stroke || e.pointerId !== stroke.pid) return;
+  e.preventDefault();
+  const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of (evs.length ? evs : [e])) {
+    const [x, y] = toCanvas(ev), d = Math.hypot(x - stroke.x, y - stroke.y); if (d < 1.5) continue;
+    stroke.len += d; segment(stroke.x, stroke.y, x, y); stroke.x = x; stroke.y = y;
+  }
+});
+const endStroke = e => { if (stroke && e.pointerId === stroke.pid) stroke = null; };
+stage.addEventListener('pointerup', endStroke); stage.addEventListener('pointercancel', endStroke);
+for (const ev of ['gesturestart', 'gesturechange', 'touchmove']) document.addEventListener(ev, e => { if (!$('paint').hidden && !e.target.closest('.swatches')) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/* bin */
+$('binBtn').onclick = () => { $('ask').hidden = false; };
+$('askNo').onclick = () => { $('ask').hidden = true; };
+$('askYes').onclick = () => { $('ask').hidden = true; pushUndo(0, 0, N, N); pctx.clearRect(0, 0, N, N); dirty = true; };
+
+/* tick: save and go home */
+function isBlank() { const d = pctx.getImageData(0, 0, N, N).data; for (let i = 3; i < d.length; i += 16) if (d[i]) return false; return true; }
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 1600); }
+$('tickBtn').onclick = async () => {
+  if (!current) return;
+  if (dirty) {
+    if (isBlank()) { if (hadSave) await DB.del(current.key); }
+    else {
+      const T = 360, tc = document.createElement('canvas'); tc.width = tc.height = T; const tx = tc.getContext('2d');
+      tx.fillStyle = '#fff'; tx.fillRect(0, 0, T, T); tx.drawImage(paintCv, 0, 0, T, T); tx.drawImage(lineCv, 0, 0, T, T);
+      await DB.put(current.key, { paint: paintCv.toDataURL('image/png'), thumb: tc.toDataURL('image/jpeg', 0.85), t: Date.now() });
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+      toast('⭐ Saved! ⭐');
+    }
+  }
+  current = null; labels = null; undoStack = []; undoBytes = 0; masks = new Map();
+  await loadThumbs(); renderHome(); show('home');
+};
+
+/* start */
+loadThumbs().then(renderHome);
+renderTools();
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+window.__app = { openPaint, get colour() { return colour; }, set colour(c) { colour = c; }, setTool: id => { tool = TOOLS.find(t => t.id === id); renderTools(); }, MAGIC, PLAIN };
+})();
+</script>
+</body>
+</html>
