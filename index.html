@@ -60,7 +60,9 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .thumb.done { border-color: var(--c, #ffc94d); }
 .thumb.done::after { content: ''; position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z' fill='%23ffc61a' stroke='%23b37b00' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
 .thumb.add { background: #f6eefb; border: 4px dashed #c792ff; }
-.thumb.add img { padding: 14%; }
+.thumb.add img { padding: 14% 14% 26%; }
+.thumb.add span { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; font-weight: 700; font-size: 15px; color: #6b4a80; }
+.thumb.add.cam { background: #eaf4ff; border-color: #6fb0ff; }
 .empty { grid-column: 1 / -1; text-align: center; font-size: 24px; color: #a487b5; padding: 60px 10px; }
 
 /* ---------- painting ---------- */
@@ -156,6 +158,17 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 #ask .row button { width: 100px; height: 100px; border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow); }
 #ask .row svg { width: 60%; height: 60%; }
 .yes { background: #4cd964; } .no { background: #ff6b6b; }
+#prep { position: fixed; inset: 0; z-index: 35; background: rgba(74, 43, 94, .45); display: grid; place-items: center; padding: calc(var(--sat) + 10px) 10px calc(var(--sab) + 10px); }
+.prepBox { background: #fff; border-radius: 30px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: var(--shadow); max-width: 100%; }
+.prepPic { position: relative; width: min(62vh, 86vw); aspect-ratio: 1; border-radius: 18px; overflow: hidden; box-shadow: inset 0 0 0 2px #eee; }
+#prepCv { width: 100%; height: 100%; display: block; }
+#prepWait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; background: rgba(255,255,255,.75); }
+.modes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.modes button { padding: 10px 16px; border-radius: 999px; background: #f6eefb; font-size: 18px; font-weight: 700; }
+.modes button.on { background: linear-gradient(135deg, #ffd6ec, #e3d6ff); box-shadow: inset 0 0 0 3px var(--accent2); }
+#prep .row { display: flex; gap: 26px; }
+#prep .row button { width: 80px; height: 80px; border-radius: 50%; display: grid; place-items: center; box-shadow: var(--shadow); }
+#prep .row svg { width: 58%; height: 58%; }
 .toast { position: fixed; left: 50%; bottom: calc(var(--sab) + 30px); transform: translateX(-50%); background: #fff; padding: 14px 26px; border-radius: 999px; box-shadow: var(--shadow); font-size: 22px; font-weight: 600; z-index: 40; }
 </style>
 </head>
@@ -206,6 +219,19 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 </aside>
 
 <input type="file" id="fileIn" accept="image/*" hidden>
+<input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+<div id="prep" hidden>
+  <div class="prepBox">
+    <div class="prepPic"><canvas id="prepCv" width="1200" height="1200"></canvas><div id="prepWait">✨</div></div>
+    <div class="modes">
+      <button data-m="simple">🙂 Simple</button><button data-m="detail">✨ Detailed</button><button data-m="sheet">📄 Colouring page</button>
+    </div>
+    <div class="row">
+      <button class="no" id="prepNo" aria-label="Cancel"><svg viewBox="0 0 48 48"><path d="M14 14l20 20M34 14 14 34" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg></button>
+      <button class="yes" id="prepYes" aria-label="Use this picture"><svg viewBox="0 0 48 48"><path d="M11 25l9 9 18-20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </div>
+</div>
 <div id="ask" hidden>
   <div class="box">
     <svg viewBox="0 0 48 48"><path d="M10 14h28l-3 28H13z" fill="#ffb3c7" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M7 13h34M19 13V8h10v5" fill="none" stroke="#4a2b5e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1262,7 +1288,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.4';
+const VERSION = 'v1.5';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -1298,6 +1324,7 @@ const TITLE = 'My Colouring Book', TITLE_COLS = ['#ff4d6d', '#ff8a3d', '#f5b700'
 $('title').innerHTML = [...TITLE].map((ch, k) => ch === ' ' ? ' ' : `<span style="color:${TITLE_COLS[k % TITLE_COLS.length]};animation-delay:${k * 0.12}s">${ch}</span>`).join('');
 
 const PLUS_ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="14" y="22" width="72" height="58" rx="10" fill="#fff" stroke="#4a2b5e" stroke-width="5"/><circle cx="36" cy="42" r="7" fill="#ffc61a"/><path d="M18 74l20-20 14 12 12-10 18 16" fill="#9fe3a8" stroke="#4a2b5e" stroke-width="4" stroke-linejoin="round"/><circle cx="78" cy="24" r="17" fill="#c792ff" stroke="#4a2b5e" stroke-width="4"/><path d="M78 15v18M69 24h18" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>');
+const CAM_ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M14 34q0-8 8-8h12l6-9h20l6 9h12q8 0 8 8v38q0 8-8 8H22q-8 0-8-8z" fill="#fff" stroke="#4a2b5e" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="52" r="17" fill="#d9ecff" stroke="#4a2b5e" stroke-width="5"/><circle cx="50" cy="52" r="7" fill="#3b8cff"/><circle cx="76" cy="38" r="4" fill="#ff5fae"/></svg>');
 function renderHome() {
   const cats = $('cats'); cats.innerHTML = '';
   const kids = ART.CATS.filter(c => !c.adult), adults = ART.CATS.filter(c => c.adult);
@@ -1340,8 +1367,10 @@ function openGrid(catId) {
   show('grid');
 }
 function openPages(box) {
+  const cam = document.createElement('button'); cam.className = 'thumb add cam'; cam.setAttribute('aria-label', 'Take a photo');
+  cam.innerHTML = `<img alt="" src="${CAM_ICON}"><span>Take a photo</span>`; cam.onclick = () => $('camIn').click(); box.appendChild(cam);
   const add = document.createElement('button'); add.className = 'thumb add'; add.setAttribute('aria-label', 'Add a picture');
-  add.innerHTML = `<img alt="" src="${PLUS_ICON}">`; add.onclick = () => $('fileIn').click(); box.appendChild(add);
+  add.innerHTML = `<img alt="" src="${PLUS_ICON}"><span>Add a picture</span>`; add.onclick = () => $('fileIn').click(); box.appendChild(add);
   for (const [id, pg] of [...pagesCache].sort((a, b) => b[1].t - a[1].t)) {
     const key = 'page:' + id, b = document.createElement('button'), img = document.createElement('img');
     b.className = 'thumb' + (thumbsCache.has(key) ? ' done' : ''); img.alt = ''; img.src = thumbsCache.get(key) || pg.thumb;
@@ -1355,12 +1384,9 @@ function openPages(box) {
   show('grid');
 }
 
-/* ===== adding your own picture (from Photos or Files) ===== */
-// Turns a photo or downloaded colouring sheet into clean black outlines on white.
-async function makeLineArt(file) {
-  const url = URL.createObjectURL(file);
-  try {
-    const im = await loadImage(url);
+/* ===== adding your own picture (camera, Photos or Files) ===== */
+// "Colouring page": a printed or downloaded colouring sheet -> clean black outlines on white.
+function sheetLines(im) {
     const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d', { willReadFrequently: true });
     x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
     const sc = Math.min((N * 0.95) / im.width, (N * 0.95) / im.height), w = im.width * sc, h = im.height * sc;
@@ -1390,18 +1416,112 @@ async function makeLineArt(file) {
       if (!on) on = (xx > 0 && ink[p - 1]) || (xx < N - 1 && ink[p + 1]) || (y > 0 && ink[p - N]) || (y < N - 1 && ink[p + N]);
       const v = on ? 0 : 255; o[p * 4] = o[p * 4 + 1] = o[p * 4 + 2] = v; o[p * 4 + 3] = 255; }
     x.putImageData(out, 0, 0);
-    const t = document.createElement('canvas'); t.width = t.height = 360; t.getContext('2d').drawImage(c, 0, 0, 360, 360);
-    return { line: c.toDataURL('image/png'), thumb: t.toDataURL('image/jpeg', 0.85), t: Date.now() };
-  } finally { URL.revokeObjectURL(url); }
+    return c;
 }
-$('fileIn').addEventListener('change', async e => {
-  const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
-  show('paint'); fitStage(); $('loading').hidden = false; $('loading').textContent = '✨';
-  try {
-    const rec = await makeLineArt(file), id = rec.t;
-    await DB.putPage(id, rec); pagesCache.set(id, { thumb: rec.thumb, t: rec.t });
-    $('loading').textContent = '✏️'; openPaint('page', id);
-  } catch (err) { $('loading').textContent = '✏️'; toast('That picture didn\'t work, try another'); renderHome(); show('home'); }
+// "Simple" / "Detailed": a real photo -> a line drawing. The photo is smoothed, its colours are grouped
+// into a few areas, tiny bits are merged away, and the borders between areas become the outlines.
+function photoLines(im, detail) {
+  const S = 360, k0 = S / Math.max(im.width, im.height), w = Math.max(16, Math.round(im.width * k0)), h = Math.max(16, Math.round(im.height * k0)), n = w * h;
+  const sm = document.createElement('canvas'); sm.width = w; sm.height = h; const sx = sm.getContext('2d', { willReadFrequently: true });
+  sx.drawImage(im, 0, 0, w, h);
+  const px = sx.getImageData(0, 0, w, h).data, ch = [new Float32Array(n), new Float32Array(n), new Float32Array(n)];
+  for (let p = 0; p < n; p++) { const r = px[p * 4], g = px[p * 4 + 1], b = px[p * 4 + 2]; ch[0][p] = 0.299 * r + 0.587 * g + 0.114 * b; ch[1][p] = 128 - 0.169 * r - 0.331 * g + 0.5 * b; ch[2][p] = 128 + 0.5 * r - 0.419 * g - 0.081 * b; }
+  const Y0 = ch[0].slice();
+  const blur = (a, r) => { const t = new Float32Array(n);
+    for (let pass = 0; pass < 3; pass++) {
+      for (let y = 0; y < h; y++) { let s = 0, cnt = 0; for (let x = -r; x < w + r; x++) { if (x + r < w) { s += a[y * w + x + r]; cnt++; } if (x - r - 1 >= 0) { s -= a[y * w + x - r - 1]; cnt--; } if (x >= 0 && x < w) t[y * w + x] = s / cnt; } }
+      for (let x = 0; x < w; x++) { let s = 0, cnt = 0; for (let y = -r; y < h + r; y++) { if (y + r < h) { s += t[(y + r) * w + x]; cnt++; } if (y - r - 1 >= 0) { s -= t[(y - r - 1) * w + x]; cnt--; } if (y >= 0 && y < h) a[y * w + x] = s / cnt; } }
+    } };
+  for (const c of ch) blur(c, detail ? 1 : 2);
+  // group colours (k-means)
+  const K = detail ? 9 : 5; let seed = 12345; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const cen = []; cen.push([ch[0][0], ch[1][0], ch[2][0]]);
+  const dist = (p, c) => { const a = ch[0][p] - c[0], b = ch[1][p] - c[1], d = ch[2][p] - c[2]; return a * a * 0.35 + (b * b + d * d) * 2.2; };
+  const cdist = (u, v) => { const a = u[0] - v[0], b = u[1] - v[1], d = u[2] - v[2]; return a * a + (b * b + d * d) * 2.2; };
+  while (cen.length < K) { let best = -1, bp = 0; for (let t = 0; t < 400; t++) { const p = Math.floor(rnd() * n); const d = Math.min(...cen.map(c => dist(p, c))); if (d > best) { best = d; bp = p; } } cen.push([ch[0][bp], ch[1][bp], ch[2][bp]]); }
+  const lab = new Uint8Array(n);
+  for (let it = 0; it < 10; it++) {
+    const sum = cen.map(() => [0, 0, 0, 0]);
+    for (let p = 0; p < n; p++) { let bi = 0, bd = 1e18; for (let c = 0; c < K; c++) { const d = dist(p, cen[c]); if (d < bd) { bd = d; bi = c; } } lab[p] = bi; const s = sum[bi]; s[0] += ch[0][p]; s[1] += ch[1][p]; s[2] += ch[2][p]; s[3]++; }
+    sum.forEach((s, c) => { if (s[3]) cen[c] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]]; });
+  }
+  // tidy: majority filter, then merge areas that are too small to colour
+  for (let pass = 0; pass < 2; pass++) { const o = lab.slice(), cnt = new Uint16Array(K);
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { cnt.fill(0); let bi = lab[y * w + x], bc = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const v = lab[(y + dy) * w + x + dx]; if (++cnt[v] > bc) { bc = cnt[v]; bi = v; } } o[y * w + x] = bi; }
+    lab.set(o); }
+  const minArea = n * (detail ? 0.0012 : 0.005), tiny = n * (detail ? 0.00025 : 0.0008), comp = new Int32Array(n), stack = new Int32Array(n);
+  const keep = (s, la, lb) => s >= tiny && cdist(cen[la], cen[lb]) > 2600; // stands out strongly
+  for (let round = 0; round < 40; round++) {
+    comp.fill(0); let id = 0; const size = [0];
+    for (let p = 0; p < n; p++) { if (comp[p]) continue; id++; let sp = 0, s = 0; stack[sp++] = p; comp[p] = id;
+      while (sp) { const c = stack[--sp], x = c % w; s++; for (const nb of [x > 0 ? c - 1 : -1, x < w - 1 ? c + 1 : -1, c - w, c + w]) if (nb >= 0 && nb < n && !comp[nb] && lab[nb] === lab[p]) { comp[nb] = id; stack[sp++] = nb; } }
+      size.push(s); }
+    let changed = 0;
+    const o = lab.slice();
+    for (let p = 0; p < n; p++) { if (size[comp[p]] >= minArea) continue; const x = p % w;
+      for (const nb of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (nb >= 0 && nb < n && comp[nb] !== comp[p] && size[comp[nb]] >= minArea) { if (!keep(size[comp[p]], lab[p], lab[nb])) { o[p] = lab[nb]; changed++; } break; } }
+    lab.set(o);
+    if (!changed) { // any small areas left with no big neighbour: join whichever neighbour they touch
+      let any = 0; for (let p = 0; p < n; p++) { if (size[comp[p]] >= minArea) continue; const x = p % w; for (const nb of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (nb >= 0 && nb < n && comp[nb] !== comp[p]) { if (!keep(size[comp[p]], lab[p], lab[nb])) { o[p] = lab[nb]; any++; } break; } }
+      lab.set(o); if (!any) break; }
+  }
+  // borders between areas become lines
+  const edge = sx.createImageData(w, h), ed = edge.data;
+  const gm = new Float32Array(n);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x, Y = Y0;
+    const gx = Y[p - w + 1] + 2 * Y[p + 1] + Y[p + w + 1] - Y[p - w - 1] - 2 * Y[p - 1] - Y[p + w - 1], gy = Y[p + w - 1] + 2 * Y[p + w] + Y[p + w + 1] - Y[p - w - 1] - 2 * Y[p - w] - Y[p - w + 1]; gm[p] = Math.hypot(gx, gy); }
+  const sorted = Float32Array.from(gm).sort(), thr = Math.max(detail ? 140 : 200, sorted[Math.floor(n * (detail ? 0.94 : 0.97))]);
+  const strong = new Uint8Array(n);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const p = y * w + x; if (gm[p] < thr) continue; // keep only the ridge of each edge (thin lines)
+    const gx = Y0[p + 1] - Y0[p - 1], gy = Y0[p + w] - Y0[p - w];
+    const [a1, a2] = Math.abs(gx) > Math.abs(gy) ? [gm[p - 1], gm[p + 1]] : [gm[p - w], gm[p + w]]; if (gm[p] >= a1 && gm[p] >= a2) strong[p] = 1; }
+  { const seen = new Uint8Array(n); // drop tiny bits of edge (specks)
+    for (let p = 0; p < n; p++) { if (!strong[p] || seen[p]) continue; const grp = [p]; seen[p] = 1;
+      for (let g = 0; g < grp.length; g++) { const c = grp[g], x = c % w; for (const dy of [-w, 0, w]) for (const dx of [-1, 0, 1]) { if ((dx === -1 && x === 0) || (dx === 1 && x === w - 1)) continue; const nb = c + dy + dx; if (nb >= 0 && nb < n && strong[nb] && !seen[nb]) { seen[nb] = 1; grp.push(nb); } } }
+      if (grp.length < 8) for (const c of grp) strong[c] = 0; } }
+  for (let p = 0; p < n; p++) { const x = p % w, b = strong[p] || (x < w - 1 && lab[p] !== lab[p + 1]) || (p + w < n && lab[p] !== lab[p + w]); ed[p * 4] = ed[p * 4 + 1] = ed[p * 4 + 2] = b ? 0 : 255; ed[p * 4 + 3] = 255; }
+  sx.putImageData(edge, 0, 0);
+  const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d', { willReadFrequently: true });
+  x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
+  const sc = (N * 0.95) / Math.max(w, h), dw = w * sc, dh = h * sc, L = (N - dw) / 2, T = (N - dh) / 2;
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(sm, L, T, dw, dh);
+  const d = x.getImageData(0, 0, N, N), q = d.data, ink = new Uint8Array(N * N);
+  for (let p = 0; p < N * N; p++) ink[p] = q[p * 4] < 200 ? 1 : 0;
+  for (let p = 0; p < N * N; p++) { const xx = p % N; const on = ink[p] || (xx > 0 && ink[p - 1]) || (xx < N - 1 && ink[p + 1]) || (p >= N && ink[p - N]) || (p < N * N - N && ink[p + N]); const v = on ? 0 : 255; q[p * 4] = q[p * 4 + 1] = q[p * 4 + 2] = v; q[p * 4 + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  x.strokeStyle = '#000'; x.lineWidth = 6; x.strokeRect(L, T, dw, dh); // a frame so the edge areas are closed in
+  return c;
+}
+function lineRecord(c) {
+  const t = document.createElement('canvas'); t.width = t.height = 360; t.getContext('2d').drawImage(c, 0, 0, 360, 360);
+  return { line: c.toDataURL('image/png'), thumb: t.toDataURL('image/jpeg', 0.85), t: Date.now() };
+}
+// preview: choose how the picture is turned into lines, then use it or cancel
+let prep = null;
+async function startPrep(file, mode) {
+  const url = URL.createObjectURL(file);
+  try { prep = { im: await loadImage(url), mode, out: null }; } catch (e) { toast('That picture didn\'t work, try another'); return; } finally { URL.revokeObjectURL(url); }
+  $('prep').hidden = false; runPrep();
+}
+function runPrep() {
+  for (const b of document.querySelectorAll('.modes button')) b.classList.toggle('on', b.dataset.m === prep.mode);
+  $('prepWait').hidden = false;
+  setTimeout(() => {
+    try { prep.out = prep.mode === 'sheet' ? sheetLines(prep.im) : photoLines(prep.im, prep.mode === 'detail'); } catch (e) { prep.out = null; }
+    const pc = $('prepCv').getContext('2d'); pc.fillStyle = '#fff'; pc.fillRect(0, 0, N, N); if (prep.out) pc.drawImage(prep.out, 0, 0);
+    $('prepWait').hidden = true;
+  }, 30);
+}
+for (const b of document.querySelectorAll('.modes button')) b.onclick = () => { if (prep && prep.mode !== b.dataset.m) { prep.mode = b.dataset.m; runPrep(); } };
+$('prepNo').onclick = () => { $('prep').hidden = true; prep = null; };
+$('prepYes').onclick = async () => {
+  if (!prep || !prep.out || !$('prepWait').hidden) return;
+  const rec = lineRecord(prep.out), id = rec.t; $('prep').hidden = true; prep = null;
+  await DB.putPage(id, rec); pagesCache.set(id, { thumb: rec.thumb, t: rec.t });
+  openPaint('page', id);
+};
+for (const [inp, mode] of [['fileIn', 'sheet'], ['camIn', 'simple']]) $(inp).addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0]; e.target.value = ''; if (file) startPrep(file, mode);
 });
 $('backHome').onclick = () => { renderHome(); show('home'); };
 
