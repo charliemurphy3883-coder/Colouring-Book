@@ -56,6 +56,8 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .thumb.done { border-color: var(--c, #ffc94d); }
 .thumb.done::after { content: ''; position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z' fill='%23ffc61a' stroke='%23b37b00' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+.thumb.add { background: #f6eefb; border: 4px dashed #c792ff; }
+.thumb.add img { padding: 14%; }
 .empty { grid-column: 1 / -1; text-align: center; font-size: 24px; color: #a487b5; padding: 60px 10px; }
 
 /* ---------- painting ---------- */
@@ -83,7 +85,8 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 #lineCv { pointer-events: none; }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: #b49bc4; background: #fff; }
 
-@media (min-width: 700px) and (orientation: landscape) { .cats { grid-template-columns: repeat(3, 1fr); max-width: min(980px, 130vh); } }
+@media (min-width: 600px) { .cats { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) and (orientation: landscape) { .cats { grid-template-columns: repeat(5, 1fr); max-width: 1200px; } }
 @media (orientation: portrait) {
   #paint { grid-template-columns: 1fr; grid-template-rows: calc(var(--sat) + 100px) 1fr calc(var(--sab) + 108px); }
   .tools, .side { flex-direction: row; padding: 8px 10px; }
@@ -165,6 +168,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
   <div class="swatches" id="swatches"></div>
 </aside>
 
+<input type="file" id="fileIn" accept="image/*" hidden>
 <div id="ask" hidden>
   <div class="box">
     <svg viewBox="0 0 48 48"><path d="M10 14h28l-3 28H13z" fill="#ffb3c7" stroke="#4a2b5e" stroke-width="3" stroke-linejoin="round"/><path d="M7 13h34M19 13V8h10v5" fill="none" stroke="#4a2b5e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -745,12 +749,201 @@ const ART = (() => {
     const r = rng(5000 + i), name = ANIMAL_LIST[a];
     const out = ANIMALS[name]({ scarf: acc === 4 });
     const bgName = HABITAT[name] || ['garden', 'hearts', 'butterflies', 'sparkle'][bgk];
-    let s = background(bgName, r) + out.s;
+    let s = background(bgName, r) + (HABITAT[name] ? habitatExtra(bgk) : '') + out.s;
     const [hx, hy, rot] = out.head;
     if (acc === 0) s += bow(hx, hy, 34, rot);
     if (acc === 1) s += flower(hx, hy, 44, 5, 10);
     if (acc === 2 && !['ladybug', 'butterfly', 'snail'].includes(name)) s += partyHat(hx - 8, hy + 12, 70, rot);
     if (acc === 3) s += littleCrown(hx - 6, hy + 12, 72, rot);
+    return s;
+  }
+
+  /* habitat animals: add a little extra so every picture is different */
+  function habitatExtra(k) { return ['', sparkle(200, 50, 18) + sparkle(400, 50, 18), heart(200, 50, 36) + heart(400, 50, 36), star(200, 50, 20) + star(400, 50, 20)][k]; }
+
+  /* ---------- VEHICLES (used by Things That Go and Puppy Pals) ---------- */
+  const wheel = (x, y, r) => circle(x, y, r) + circle(x, y, r * 0.42);
+  const VEH = {
+    car() { return { a: path('M190,320 L225,245 Q232,232 248,232 L352,232 Q368,232 375,245 L415,320 Z') + path('M212,315 L240,255 L292,255 L292,315 Z', 5) + path('M308,315 L308,255 L360,255 L392,315 Z', 5),
+      b: path('M100,410 L100,350 Q100,320 130,318 L470,318 Q500,320 500,350 L500,410 Q500,425 485,425 L115,425 Q100,425 100,410 Z') + line(300, 322, 300, 420) + rect(320, 345, 30, 10, 5, 4) + ell(486, 350, 10, 14) + wheel(190, 425, 48) + wheel(410, 425, 48),
+      seat: [262, 270, 46], decal: [[160, 375], [440, 375]], bg: 'road' }; },
+    police() { return { a: path('M190,320 L225,245 Q232,232 248,232 L352,232 Q368,232 375,245 L415,320 Z') + rect(318, 212, 64, 22, 7) + line(350, 212, 350, 234) + path('M212,315 L240,255 L292,255 L292,315 Z', 5) + path('M308,315 L308,255 L360,255 L392,315 Z', 5),
+      b: path('M100,410 L100,350 Q100,320 130,318 L470,318 Q500,320 500,350 L500,410 Q500,425 485,425 L115,425 Q100,425 100,410 Z') + line(100, 365, 500, 365) + line(300, 322, 300, 420) + star(400, 392, 20) + ell(486, 345, 10, 12) + wheel(190, 425, 48) + wheel(410, 425, 48),
+      seat: [262, 270, 46], decal: [[160, 392]], bg: 'road' }; },
+    fire() { let lad = rect(90, 250, 290, 26); for (let x = 120; x < 380; x += 30) lad += line(x, 250, x, 276, 5);
+      return { a: lad + circle(380, 263, 14) + path('M410,215 Q410,192 430,192 Q450,192 450,215 Z') + path('M380,410 L380,240 Q380,215 405,215 L470,215 Q500,215 512,250 L530,330 L530,410 Z') + path('M400,235 L465,235 Q482,235 490,260 L505,310 L400,310 Z', 5),
+      b: rect(70, 290, 320, 120, 14) + rect(95, 312, 80, 75, 8) + rect(195, 312, 80, 75, 8) + circle(335, 350, 34) + circle(335, 350, 12) + rect(505, 382, 45, 26, 8) + ell(522, 345, 8, 12) + wheel(140, 425, 46) + wheel(290, 425, 46) + wheel(462, 425, 46),
+      seat: [448, 268, 40], decal: [[135, 350], [235, 350]], bg: 'road' }; },
+    icecream() { let aw = 'M120,252 L320,252 L320,270'; for (let k = 0; k < 5; k++) { const xa = 320 - k * 40, xb = xa - 40; aw += ` A20 20 0 0 1 ${xb},270`; }
+      return { a: circle(300, 160, 36) + path('M268,178 L332,178 L300,236 Z') + path('M90,420 L90,250 Q90,230 110,230 L420,230 Q440,230 448,250 L505,330 L510,420 Z') + rect(130, 268, 180, 92, 10) + path('M425,250 L445,250 L490,330 L425,330 Z', 5),
+      b: path(aw + ' L120,270 Z') + rect(124, 352, 192, 16, 6) + ell(500, 360, 9, 12) + wheel(170, 425, 46) + wheel(420, 425, 46),
+      seat: [220, 322, 46], decal: [[380, 380]], bg: 'road' }; },
+    bus() { let w = ''; for (let k = 0; k < 4; k++) w += rect(85 + k * 85, 215, 65, 70, 10, 5);
+      return { a: rect(60, 190, 480, 230, 24) + w + rect(420, 215, 46, 180, 8, 5) + line(443, 215, 443, 395, 4) + rect(480, 215, 46, 95, 10, 5),
+      b: line(60, 320, 420, 320) + line(466, 330, 540, 330) + ell(528, 370, 8, 12) + wheel(150, 425, 44) + wheel(440, 425, 44),
+      seat: [202, 262, 30], decal: [[150, 370], [280, 370]], bg: 'road' }; },
+    digger() { return { a: capsule(150, 300, 150, 240, 18) + path('M140,300 L160,200 L290,200 L300,300 Z') + path('M172,290 L184,220 L278,220 L284,290 Z', 5),
+      b: rect(110, 300, 250, 100, 14) + rect(80, 400, 300, 70, 35) + wheel(125, 435, 22) + wheel(230, 435, 22) + wheel(335, 435, 22) + capsule(330, 330, 450, 220, 40) + capsule(450, 220, 510, 330, 34) + path('M478,318 L545,305 L550,372 Q518,398 468,372 Z') + circle(330, 330, 12) + circle(450, 220, 12),
+      seat: [230, 262, 40], decal: [[230, 350]], bg: 'dirt' }; },
+    dump() { return { a: path('M400,410 L400,250 Q400,230 420,230 L470,230 Q500,230 510,260 L525,330 L525,410 Z') + path('M415,245 L465,245 Q485,245 492,270 L505,320 L415,320 Z', 5),
+      b: circle(140, 255, 30) + circle(200, 245, 34) + circle(265, 250, 30) + circle(320, 258, 26) + path('M60,262 L380,262 L360,385 L90,385 Z') + line(75, 300, 374, 300) + rect(60, 385, 470, 32, 10) + ell(518, 360, 8, 12) + wheel(140, 432, 44) + wheel(260, 432, 44) + wheel(458, 432, 44),
+      seat: [455, 285, 38], decal: [[225, 345]], bg: 'dirt' }; },
+    tractor() { return { a: rect(250, 168, 175, 22, 8) + capsule(264, 190, 264, 300, 14) + capsule(410, 190, 410, 300, 14),
+      b: capsule(110, 300, 110, 230, 18) + path('M60,320 Q60,300 80,300 L430,300 L430,392 L60,392 Z') + line(260, 300, 260, 392) + line(85, 320, 85, 375, 5) + line(105, 320, 105, 375, 5) + line(125, 320, 125, 375, 5) + wheel(370, 408, 90) + wheel(115, 432, 52),
+      seat: [338, 258, 44], decal: [[190, 345]], bg: 'farm' }; },
+    train() { return { a: cloud(170, 135, 90) + cloud(240, 80, 80) + path('M128,272 L118,190 L182,190 L172,272 Z') + path('M212,272 A28 28 0 0 1 268,272 Z') + path('M315,205 L515,205 L515,180 Q415,158 315,180 Z') + rect(330, 205, 170, 195, 12) + rect(370, 228, 90, 82, 12, 5),
+      b: rect(90, 270, 245, 125, 28) + line(170, 270, 170, 395) + line(250, 270, 250, 395) + path('M58,420 L95,365 L95,420 Z') + rect(70, 395, 440, 30, 10) + wheel(145, 440, 38) + wheel(245, 440, 38) + wheel(425, 432, 50),
+      seat: [415, 270, 36], decal: [[420, 355]], bg: 'rails' }; },
+    plane() { return { a: path('M100,300 L80,185 L150,185 L195,262 Z') + ell(300, 285, 120, 18) + path('M370,250 Q385,210 405,248 Z', 5),
+      b: capsule(300, 345, 300, 405, 10) + circle(300, 410, 26) + path('M90,300 Q90,250 160,250 L430,250 Q520,260 532,300 Q520,342 430,350 L160,350 Q90,350 90,300 Z') + circle(200, 290, 14) + circle(245, 290, 14) + ell(290, 328, 150, 26, -4) + circle(540, 300, 14) + ell(540, 250, 12, 38) + ell(540, 350, 12, 38),
+      seat: [330, 238, 42], decal: [[440, 300]], bg: 'sky' }; },
+    heli() { return { a: path('M60,288 L250,270 L250,318 L60,304 Z') + path('M60,300 L45,235 L95,240 L100,296 Z') + circle(70, 236, 28) + line(48, 236, 92, 236) + capsule(310, 150, 310, 185, 16) + capsule(110, 142, 510, 142, 22) + ell(320, 270, 140, 105) + path('M330,190 Q440,190 452,270 L330,270 Z', 5),
+      b: path('M182,270 L458,270 Q450,350 330,374 Q210,368 182,270 Z') + capsule(200, 425, 470, 425, 14) + capsule(255, 368, 245, 422, 12) + capsule(405, 368, 415, 422, 12),
+      seat: [385, 240, 40], decal: [[260, 320]], bg: 'sky' }; },
+    boat() { return { a: rect(220, 240, 170, 92, 12) + circle(265, 285, 18) + circle(345, 285, 18) + capsule(430, 110, 430, 330, 12) + path('M436,118 L500,140 L436,165 Z'),
+      b: path('M70,330 L530,330 L470,430 L130,430 Z') + line(91, 365, 509, 365) + circle(180, 397, 15) + circle(300, 397, 15) + circle(420, 397, 15),
+      seat: [160, 290, 42], decal: [[240, 347]], bg: 'sea' }; },
+    rocket() { return { a: path('M232,395 L165,475 L240,462 Z') + path('M368,395 L435,475 L360,462 Z') + path('M255,465 Q300,575 345,465 Z') + path('M275,465 Q300,530 325,465 Z', 5) + path('M230,470 L230,230 Q230,125 300,72 Q370,125 370,230 L370,470 Z') + line(230, 230, 370, 230) + line(230, 405, 370, 405) + circle(300, 300, 48) + circle(300, 300, 36, 5),
+      b: '', seat: [300, 305, 26], decal: [[300, 160]], bg: 'space' }; },
+    balloon() { return { a: path('M300,70 C420,70 452,180 422,260 C402,310 352,338 342,370 L258,370 C248,338 198,310 178,260 C148,180 180,70 300,70 Z') + curve('M300,72 C248,150 252,300 282,368') + curve('M300,72 C352,150 348,300 318,368') + line(262, 370, 258, 432, 4) + line(338, 370, 342, 432, 4),
+      b: rect(240, 430, 120, 72, 12) + line(240, 455, 360, 455, 5) + line(240, 478, 360, 478, 5),
+      seat: [300, 400, 40], decal: [[230, 200], [370, 200]], bg: 'sky' }; },
+  };
+  const VEH_LIST = Object.keys(VEH);
+  function vehBg(kind, v, r) {
+    const sky = [cloud(90, 90, 120) + sun(520, 85, 36), cloud(100, 80, 110) + cloud(500, 110, 110), cloud(90, 90, 120) + butterfly(520, 90, 70), balloon(80, 110, 34) + cloud(500, 90, 120)][v];
+    if (kind === 'road') return sky + rect(-10, 470, 620, 140) + rect(40, 520, 80, 14, 7, 4) + rect(260, 520, 80, 14, 7, 4) + rect(480, 520, 80, 14, 7, 4);
+    if (kind === 'dirt') return sky + path('M-10,475 Q150,455 300,475 T610,470 L610,610 L-10,610 Z') + circle(520, 520, 18) + circle(80, 540, 14);
+    if (kind === 'farm') return sky + ground(500) + flower(540, 520, 30) + flower(60, 540, 26);
+    if (kind === 'rails') return sky + rect(-10, 478, 620, 16) + [40, 120, 200, 280, 360, 440, 520].map(x => rect(x, 494, 40, 14, 4, 5)).join('');
+    if (kind === 'sea') return [cloud(90, 90, 120) + sun(520, 85, 36), cloud(100, 80, 110) + cloud(480, 110, 100), cloud(90, 90, 120) + star(520, 90, 26), sun(80, 85, 34) + cloud(500, 90, 120)][v] + path('M-10,420 Q40,400 90,420 T190,420 T290,420 T390,420 T490,420 T610,420 L610,610 L-10,610 Z') + curve('M60,520 q25,-18 50,0 M450,500 q25,-18 50,0 M260,560 q25,-18 50,0', 5);
+    if (kind === 'space') return moon(90, 90, 46) + [[520, 80, 26], [470, 200, 16], [90, 300, 22], [520, 320, 20], [100, 470, 18]].map(([x, y, s]) => star(x, y, s)).join('') + circle(500, 480, 48) + ell(500, 480, 80, 18, -15) + [sparkle(160, 180, 18), heart(470, 400, 34), star(150, 560, 20), sparkle(470, 560, 16)][v];
+    return sky;
+  }
+  function decals(list, k) { return list.map(([x, y]) => [ '', star(x, y, 18), heart(x, y, 34), flower(x, y, 30) ][k]).join(''); }
+
+  function pupHead(cx, cy, s, ears, hat, patch) {
+    let o = '';
+    if (ears === 0) o += ell(cx - s * 0.88, cy + s * 0.15, s * 0.32, s * 0.62, 18) + ell(cx + s * 0.88, cy + s * 0.15, s * 0.32, s * 0.62, -18);
+    if (ears === 1) o += path(poly([[cx - s * 0.85, cy - s * 0.3], [cx - s * 0.8, cy - s * 1.25], [cx - s * 0.25, cy - s * 0.8]])) + path(poly([[cx + s * 0.85, cy - s * 0.3], [cx + s * 0.8, cy - s * 1.25], [cx + s * 0.25, cy - s * 0.8]]));
+    if (ears === 2) o += circle(cx - s * 0.75, cy - s * 0.7, s * 0.38) + circle(cx + s * 0.75, cy - s * 0.7, s * 0.38);
+    o += circle(cx, cy, s);
+    if (patch) o += ell(cx + s * 0.4, cy - s * 0.12, s * 0.3, s * 0.26);
+    o += ell(cx, cy + s * 0.42, s * 0.48, s * 0.34) + ell(cx, cy + s * 0.26, s * 0.17, s * 0.12);
+    o += dot(cx - s * 0.4, cy - s * 0.1, s * 0.11) + shine(cx - s * 0.36, cy - s * 0.15, s * 0.035) + dot(cx + s * 0.4, cy - s * 0.1, s * 0.11) + shine(cx + s * 0.44, cy - s * 0.15, s * 0.035);
+    o += curve(`M${f(cx)},${f(cy + s * 0.38)} L${f(cx)},${f(cy + s * 0.5)} M${f(cx - s * 0.2)},${f(cy + s * 0.55)} Q${f(cx)},${f(cy + s * 0.7)} ${f(cx + s * 0.2)},${f(cy + s * 0.55)}`, 4);
+    const top = cy - s * 0.5;
+    if (hat === 0) o += path(`M${f(cx - s * 0.9)},${f(top)} Q${f(cx - s * 0.9)},${f(cy - s * 1.3)} ${f(cx)},${f(cy - s * 1.3)} Q${f(cx + s * 0.9)},${f(cy - s * 1.3)} ${f(cx + s * 0.9)},${f(top)} Z`) + capsule(cx - s * 1.1, top, cx + s * 1.1, top, s * 0.2);
+    if (hat === 1) o += path(`M${f(cx - s * 0.75)},${f(top)} Q${f(cx - s * 0.75)},${f(cy - s * 1.2)} ${f(cx)},${f(cy - s * 1.2)} Q${f(cx + s * 0.75)},${f(cy - s * 1.2)} ${f(cx + s * 0.75)},${f(top)} Z`) + path(`M${f(cx + s * 0.4)},${f(top)} Q${f(cx + s * 1.3)},${f(top - s * 0.05)} ${f(cx + s * 1.3)},${f(top + s * 0.12)} Q${f(cx + s * 0.8)},${f(top + s * 0.2)} ${f(cx + s * 0.4)},${f(top + s * 0.1)} Z`) + circle(cx, cy - s * 1.2, s * 0.1, 4);
+    if (hat === 2) o += circle(cx - s * 0.38, top + s * 0.02, s * 0.24) + circle(cx + s * 0.38, top + s * 0.02, s * 0.24) + circle(cx - s * 0.38, top + s * 0.02, s * 0.13, 4) + circle(cx + s * 0.38, top + s * 0.02, s * 0.13, 4);
+    if (hat === 3) o += bow(cx + s * 0.55, cy - s * 0.85, s * 0.38, 15);
+    if (hat === 4) o += flower(cx - s * 0.55, cy - s * 0.8, s * 0.5, 5, 10);
+    if (hat === 5) o += littleCrown(cx, cy - s * 0.8, s * 0.95);
+    return o;
+  }
+  function puppy(i) {
+    const [vk, ears, hat, patch, v, dk] = combo(i, [VEH_LIST.length, 3, 6, 2, 4, 2]);
+    const r = rng(6000 + i), V = VEH[VEH_LIST[vk]]();
+    const [sx, sy, ss] = V.seat;
+    return vehBg(V.bg, v, r) + V.a + pupHead(sx, sy, ss, ears, hat, patch) + V.b + (dk ? decals(V.decal, 1 + (i % 3)) : '');
+  }
+  function vehicle(i) {
+    const [vk, dk, v] = combo(i, [VEH_LIST.length, 4, 4]);
+    const r = rng(7000 + i), V = VEH[VEH_LIST[vk]]();
+    return vehBg(V.bg, v, r) + V.a + V.b + decals(V.decal, dk);
+  }
+
+  /* ---------- FAIRYTALE ---------- */
+  function girlHead(hair, crown) { // drawn around (300,170)
+    const short = 'M238,175 C232,98 368,98 362,175 C366,212 360,228 350,232 L250,232 C240,228 234,212 238,175 Z';
+    let back = '', front = '';
+    if (hair === 0) back += path('M240,170 C232,92 368,92 360,170 C366,240 374,292 382,332 Q362,348 344,330 L256,330 Q238,348 218,332 C226,292 234,240 240,170 Z');
+    if (hair === 1) back += path(bumpyD([[226, 330], [220, 285], [222, 240], [229, 196], [244, 152], [270, 120], [300, 108], [330, 120], [356, 152], [371, 196], [378, 240], [380, 285], [374, 330]], false) + ' L300,330 Z');
+    if (hair === 2) back += ell(222, 210, 30, 46, 18) + ell(378, 210, 30, 46, -18) + path(short) + circle(240, 180, 10) + circle(360, 180, 10);
+    front += circle(300, 170, 60) + path('M238,172 A63 63 0 1 1 362,172 Q356,150 340,138 Q330,152 312,140 Q300,152 286,138 Q272,152 258,142 Q244,150 238,172 Z');
+    front += dot(278, 178, 7) + shine(280, 175, 2.2) + dot(322, 178, 7) + shine(324, 175, 2.2) + curve('M287,200 Q300,212 313,200') + circle(261, 195, 9, 4) + circle(339, 195, 9, 4);
+    if (crown === 0) front += path('M262,124 L270,98 L284,113 L300,84 L316,113 L330,98 L338,124 Q300,113 262,124 Z') + circle(300, 108, 7, 4);
+    if (crown === 1) front += star(342, 128, 22);
+    if (crown === 2) for (let k = 0; k < 5; k++) { const a = (215 + k * 27.5) * Math.PI / 180; front += flower(300 + Math.cos(a) * 62, 170 + Math.sin(a) * 62, 26, 5, k * 20); }
+    return { back, front };
+  }
+  function fairytale(i) {
+    const [type, v1, v2, bgk] = combo(i, [8, 3, 3, 4]);
+    const r = rng(8000 + i);
+    let s = '';
+    if (type === 0) { // mermaid on a rock
+      const h = girlHead(v1, v2);
+      s += bubbles(r) + seaweed(55, 200) + seaweed(560, 160) + [star(80, 520, 30), heart(520, 520, 50), sparkle(520, 300, 20), circle(80, 380, 16)][bgk];
+      s += path('M140,600 Q150,500 250,490 Q360,485 400,600 Z');
+      s += `<g transform="translate(0 10)">` + h.back + path('M415,470 C450,420 520,428 542,452 C512,470 502,492 522,522 C482,522 442,512 415,495 Z') +
+        path('M268,318 C245,400 265,470 330,495 C370,505 400,495 425,482 L415,455 C390,470 360,470 340,455 C310,430 325,380 332,318 Z') +
+        curve('M275,380 q10,10 20,0 M300,410 q10,10 20,0 M290,440 q10,10 20,0 M320,470 q10,10 20,0', 4) +
+        rect(288, 222, 24, 30) + path('M262,250 L338,250 L332,320 L268,320 Z') + line(263, 275, 336, 275) +
+        capsule(262, 258, 232, 340, 22) + capsule(338, 258, 368, 340, 22) + circle(230, 346, 14) + circle(370, 346, 14) + h.front + '</g>';
+      return s;
+    }
+    if (type === 1) { // fairy
+      const h = girlHead(v1, v2);
+      s += ['', flower(70, 470, 46) + flower(530, 470, 40, 6), butterfly(80, 100, 70) + butterfly(520, 110, 64), [[70, 90], [530, 90], [80, 300], [520, 310]].map(([x, y]) => sparkle(x, y, 22)).join('')][bgk] + ground(540);
+      s += ell(215, 250, 95, 60, -30) + ell(385, 250, 95, 60, 30) + ell(225, 345, 60, 38, 30) + ell(375, 345, 60, 38, -30);
+      s += h.back + capsule(280, 420, 278, 505, 20) + capsule(320, 420, 322, 505, 20) + ell(270, 515, 22, 13) + ell(330, 515, 22, 13);
+      s += rect(288, 222, 24, 44) + path(tierShape(322, 56, 440, 230, 6).d) + path('M262,258 L338,258 L328,330 L272,330 Z') + circle(300, 326, 9, 4);
+      s += capsule(255, 285, 230, 372, 22) + circle(228, 380, 14) + capsule(404, 232, 432, 140, 9) + capsule(345, 285, 400, 238, 22) + circle(404, 232, 14) + [star(434, 126, 30), heart(434, 124, 56), sparkle(434, 126, 30)][v1];
+      return s + h.front;
+    }
+    if (type === 2) { // castle
+      s += [rainbow(300, 600, 230, 4, 30), cloud(100, 90, 130) + cloud(500, 110, 120), moon(90, 90, 46) + star(520, 80, 30) + star(460, 150, 18), sun(90, 90, 40) + cloud(500, 100, 120)][bgk];
+      s += tower(70, 250, 100, 300) + tower(430, 250, 100, 300);
+      s += path('M170,300 L170,270 L200,270 L200,290 L230,290 L230,270 L260,270 L260,290 L290,290 L290,270 L310,270 L310,290 L340,290 L340,270 L370,270 L370,290 L400,290 L400,270 L430,270 L430,300 Z') + rect(170, 300, 260, 250);
+      s += tower(255, 130, 90, 140) + path('M255,550 L255,470 A45 45 0 0 1 345,470 L345,550 Z') + line(300, 425, 300, 550, 5);
+      s += [heart(210, 360, 44) + heart(390, 360, 44), star(210, 360, 22) + star(390, 360, 22), circle(210, 360, 18) + circle(390, 360, 18)][v1];
+      s += [ground(555, 6), path('M-10,560 L610,560 L610,610 L-10,610 Z') + path('M240,560 L360,560 L380,610 L220,610 Z'), ground(555, 10) + flower(40, 530, 30) + flower(560, 530, 30)][v2];
+      return s;
+    }
+    if (type === 3) { // friendly dragon
+      s += [cloud(100, 90, 120) + sun(520, 85, 36), [[70, 90], [520, 80], [80, 300], [530, 320]].map(([x, y]) => star(x, y, 22)).join(''), heart(80, 90, 56) + heart(520, 80, 50), cloud(90, 90, 120) + cloud(510, 120, 110)][bgk] + ground(530);
+      s += path('M210,450 C140,470 100,440 105,400 L125,405 C125,430 150,445 205,425 Z') + `<g transform="rotate(200 110 385)">${heart(110, 385, 46)}</g>`;
+      s += path('M250,320 C190,210 130,230 120,260 C150,258 162,278 156,300 C182,290 198,305 196,328 Z');
+      s += path(poly([[200, 340], [215, 300], [235, 330]])) + path(poly([[225, 320], [245, 282], [262, 316]]));
+      s += ell(290, 410, 110, 95);
+      const bl = [395, 425, 455].map(y => { const dx = 60 * Math.sqrt(1 - ((y - 425) / 70) ** 2); return line(310 - dx, y, 310 + dx, y); }).join('');
+      s += ell(310, 425, 60, 70) + bl + ell(240, 502, 42, 20) + ell(352, 506, 42, 20) + capsule(375, 380, 410, 410, 26);
+      s += path(poly([[288, 195], [292, 145], [318, 185]])) + path(poly([[338, 182], [356, 136], [370, 186]]));
+      s += circle(330, 250, 75) + ell(388, 276, 55, 40) + dot(410, 262, 5) + dot(425, 270, 5) + curve('M370,300 Q395,315 420,298');
+      s += [dot(330, 235, 10) + shine(333, 231, 3), curve('M316,235 Q330,248 344,235'), dot(330, 235, 10) + shine(333, 231, 3) + line(322, 224, 316, 216, 4) + line(332, 222, 332, 213, 4) + line(342, 224, 348, 216, 4)][v1] + circle(345, 278, 11, 4);
+      s += [cloud(480, 250, 70), heart(470, 245, 40) + heart(510, 205, 30), sparkle(470, 245, 22) + sparkle(505, 205, 16)][v2];
+      return s;
+    }
+    if (type === 4) { // frog prince
+      s += background('pond', r) + tower(470, 230, 80, 220) + [ '', sparkle(200, 60, 18), heart(200, 60, 36), star(200, 60, 20) ][bgk];
+      const fr = ANIMALS.frog({});
+      s += `<g transform="translate(-60 0)">${fr.s}${littleCrown(370, 186, [72, 90, 60][v1])}${v2 === 1 ? bow(300, 380, 30) : v2 === 2 ? heart(300, 400, 50) : ''}</g>`;
+      return s;
+    }
+    if (type === 5) { // royal carriage
+      s += [cloud(90, 90, 120) + sun(520, 85, 36), [[70, 90], [530, 90], [90, 260], [520, 270]].map(([x, y]) => sparkle(x, y, 22)).join(''), heart(80, 90, 50) + heart(520, 90, 50), moon(90, 90, 44) + star(520, 90, 26)][bgk] + ground(520, 8);
+      const spokes = (x, y) => { let o = circle(x, y, 62); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; o += line(x + Math.cos(a) * 16, y + Math.sin(a) * 16, x + Math.cos(a) * 62, y + Math.sin(a) * 62, 5); } return o + circle(x, y, 16); };
+      s += capsule(130, 420, 470, 420, 18) + spokes(175, 450) + spokes(425, 450);
+      s += ell(300, 300, 160, 125) + line(150, 340, 450, 340);
+      s += [ell(300, 270, 55, 62), heart(300, 275, 120), path('M245,320 L245,250 A55 55 0 0 1 355,250 L355,320 Z')][v1];
+      s += [littleCrown(300, 180, 90), heart(300, 160, 60), star(300, 155, 34)][v2] + circle(160, 300, 14) + circle(440, 300, 14);
+      return s;
+    }
+    if (type === 6) { // treasure chest
+      s += [sparkle(80, 90, 26) + sparkle(520, 90, 26), star(80, 90, 26) + star(520, 90, 26), heart(80, 90, 50) + heart(520, 90, 50), cloud(100, 90, 120) + cloud(500, 90, 120)][bgk];
+      s += path('M150,330 L150,290 Q300,200 450,290 L450,330 Z') + rect(150, 330, 300, 170, 16) + rect(195, 330, 34, 170, 4) + rect(371, 330, 34, 170, 4) + rect(278, 340, 44, 50, 8) + circle(300, 360, 7, 4);
+      s += littleCrown(300, 258, 120) + [heart(212, 280, 40), star(212, 282, 20), circle(212, 282, 14)][v2];
+      for (let k = 0; k < 9; k++) s += circle(140 + k * 40, 515 + Math.sin(k) * 6, 16);
+      s += [heart(100, 470, 60) + star(510, 470, 34), circle(90, 460, 30) + heart(510, 470, 60), star(90, 470, 34) + circle(510, 460, 30)][v1];
+      return s;
+    }
+    // mushroom fairy house
+    s += [cloud(100, 90, 120) + sun(520, 85, 36), butterfly(90, 100, 70) + butterfly(510, 110, 64), [[70, 90], [530, 90], [90, 260], [520, 270]].map(([x, y]) => sparkle(x, y, 22)).join(''), moon(90, 90, 44) + star(520, 90, 26)][bgk] + ground(520);
+    s += rect(205, 300, 190, 230, 30) + path('M260,530 L260,450 A40 40 0 0 1 340,450 L340,530 Z') + circle(328, 495, 6, 4);
+    s += [circle(300, 360, 30) + line(270, 360, 330, 360, 5) + line(300, 330, 300, 390, 5), heart(300, 365, 60), rect(270, 335, 60, 50, 8)][v1];
+    s += capsule(380, 230, 380, 170, 26) + path('M110,310 C110,170 200,110 300,110 C400,110 490,170 490,310 Q300,340 110,310 Z');
+    s += [[180, 230, 26], [260, 160, 22], [350, 170, 28], [420, 250, 22], [300, 250, 30]].map(([x, y, rr]) => circle(x, y, rr)).join('');
+    s += [ell(250, 560, 30, 14) + ell(320, 585, 30, 14), flower(140, 500, 34) + flower(470, 500, 34), heart(140, 490, 46) + heart(470, 490, 46)][v2];
     return s;
   }
 
@@ -761,10 +954,21 @@ const ART = (() => {
     { id: 'cake', name: 'Cakes', count: 160, make: cake, color: '#ffb36b' },
     { id: 'lolly', name: 'Lollies', count: 160, make: lolly, color: '#5fd3c4' },
     { id: 'animal', name: 'Animals', count: 160, make: animal, color: '#8fd16a' },
+    { id: 'puppy', name: 'Puppy Pals', count: 160, make: puppy, color: '#6f9cff' },
+    { id: 'go', name: 'Things That Go', count: 160, make: vehicle, color: '#ff7a7a' },
+    { id: 'fairy', name: 'Fairytale', count: 160, make: fairytale, color: '#5fc8f0' },
   ];
+  const body = c => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#fff"/><g fill="#fff" stroke="#000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">${c}</g></svg>`;
+  const lists = {};
+  function list(c) { // picture number -> drawing, skipping any repeats
+    if (lists[c.id]) return lists[c.id];
+    const seen = new Set(), out = [];
+    for (let k = 0; out.length < c.count && k < c.count * 3; k++) { const s = body(c.make(k)); if (!seen.has(s)) { seen.add(s); out.push(s); } }
+    return (lists[c.id] = out);
+  }
   function svg(cat, i) {
     const c = CATS.find(c => c.id === cat);
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600"><rect width="600" height="600" fill="#fff"/><g fill="#fff" stroke="#000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">${c.make(i)}</g></svg>`;
+    return list(c)[i];
   }
   return { CATS, svg };
 })();
@@ -773,7 +977,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.0';
+const VERSION = 'v1.1';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -782,18 +986,24 @@ $('ver').textContent = VERSION;
 const DB = (() => {
   let dbp = null;
   const open = () => dbp || (dbp = new Promise((res) => {
-    try { const r = indexedDB.open('colouring-book', 1); r.onupgradeneeded = () => r.result.createObjectStore('pics'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
+    try { const r = indexedDB.open('colouring-book', 2); r.onupgradeneeded = () => { for (const n of ['pics', 'pages']) if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n); }; r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); }
   }));
-  const tx = async (mode, fn) => { const db = await open(); if (!db) return null; return new Promise(res => { try { const t = db.transaction('pics', mode), st = t.objectStore('pics'); const q = fn(st); t.oncomplete = () => res(q && q.result); t.onerror = () => res(null); } catch (e) { res(null); } }); };
+  const tx = async (store, mode, fn) => { const db = await open(); if (!db) return null; return new Promise(res => { try { const t = db.transaction(store, mode), st = t.objectStore(store); const q = fn(st); t.oncomplete = () => res(q && q.result); t.onerror = () => res(null); } catch (e) { res(null); } }); };
+  const all = store => new Promise(async res => { const db = await open(); if (!db) return res([]); const out = []; try { const c = db.transaction(store).objectStore(store).openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push([cur.key, cur.value]); cur.continue(); } else res(out); }; c.onerror = () => res(out); } catch (e) { res(out); } });
   return {
-    get: k => tx('readonly', st => st.get(k)),
-    put: (k, v) => tx('readwrite', st => st.put(v, k)),
-    del: k => tx('readwrite', st => st.delete(k)),
-    all: () => new Promise(async res => { const db = await open(); if (!db) return res([]); const out = []; try { const c = db.transaction('pics').objectStore('pics').openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out.push([cur.key, cur.value]); cur.continue(); } else res(out); }; c.onerror = () => res(out); } catch (e) { res(out); } }),
+    get: k => tx('pics', 'readonly', st => st.get(k)),
+    put: (k, v) => tx('pics', 'readwrite', st => st.put(v, k)),
+    del: k => tx('pics', 'readwrite', st => st.delete(k)),
+    all: () => all('pics'),
+    getPage: k => tx('pages', 'readonly', st => st.get(k)),
+    putPage: (k, v) => tx('pages', 'readwrite', st => st.put(v, k)),
+    delPage: k => tx('pages', 'readwrite', st => st.delete(k)),
+    allPages: () => all('pages'),
   };
 })();
 let thumbsCache = new Map(); // key -> thumb dataURL
-async function loadThumbs() { const all = await DB.all(); thumbsCache = new Map(all.map(([k, v]) => [k, v.thumb])); thumbsCache.times = new Map(all.map(([k, v]) => [k, v.t])); }
+let pagesCache = new Map(); // id -> { thumb, t } for pictures added from Photos
+async function loadThumbs() { const pg = await DB.allPages(); pagesCache = new Map(pg.map(([k, v]) => [k, { thumb: v.thumb, t: v.t }])); const all = await DB.all(); thumbsCache = new Map(all.map(([k, v]) => [k, v.thumb])); thumbsCache.times = new Map(all.map(([k, v]) => [k, v.t])); }
 
 /* ===== screens ===== */
 const show = id => { for (const s of ['home', 'grid', 'paint']) $(s).hidden = s !== id; };
@@ -802,13 +1012,15 @@ const svgURL = (cat, i) => 'data:image/svg+xml;charset=utf-8,' + encodeURICompon
 const TITLE = 'My Colouring Book', TITLE_COLS = ['#ff4d6d', '#ff8a3d', '#f5b700', '#35c46a', '#20b2d6', '#3b8cff', '#8a5cff', '#e040fb'];
 $('title').innerHTML = [...TITLE].map((ch, k) => ch === ' ' ? ' ' : `<span style="color:${TITLE_COLS[k % TITLE_COLS.length]};animation-delay:${k * 0.12}s">${ch}</span>`).join('');
 
+const PLUS_ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="14" y="22" width="72" height="58" rx="10" fill="#fff" stroke="#4a2b5e" stroke-width="5"/><circle cx="36" cy="42" r="7" fill="#ffc61a"/><path d="M18 74l20-20 14 12 12-10 18 16" fill="#9fe3a8" stroke="#4a2b5e" stroke-width="4" stroke-linejoin="round"/><circle cx="78" cy="24" r="17" fill="#c792ff" stroke="#4a2b5e" stroke-width="4"/><path d="M78 15v18M69 24h18" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>');
 function renderHome() {
   const cats = $('cats'); cats.innerHTML = '';
-  const tiles = [...ART.CATS.map(c => ({ ...c, cover: svgURL(c.id, 0) })), { id: 'mine', name: 'My Pictures', color: '#ffc61a' }];
+  const tiles = [...ART.CATS.map(c => ({ ...c, cover: svgURL(c.id, 0) })), { id: 'pages', name: 'My Pages', color: '#c792ff' }, { id: 'mine', name: 'My Pictures', color: '#ffc61a' }];
   for (const c of tiles) {
     const b = document.createElement('button'); b.className = 'cat'; b.style.setProperty('--c', c.color);
     let cover = c.cover;
     if (c.id === 'mine') { const latest = [...(thumbsCache.times || new Map())].sort((a, b) => b[1] - a[1])[0]; cover = latest ? thumbsCache.get(latest[0]) : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 8l12 26 28 3-21 19 6 28-25-14-25 14 6-28-21-19 28-3z" fill="#ffd84d" stroke="#b37b00" stroke-width="4" stroke-linejoin="round"/></svg>'); }
+    if (c.id === 'pages') { const latest = [...pagesCache].sort((a, b) => b[1].t - a[1].t)[0]; cover = latest ? (thumbsCache.get('page:' + latest[0]) || latest[1].thumb) : PLUS_ICON; }
     b.innerHTML = `<div class="pic"><img alt="" src="${cover}"></div><b>${c.name}</b>`;
     b.onclick = () => openGrid(c.id);
     cats.appendChild(b);
@@ -822,8 +1034,9 @@ function openGrid(catId) {
   const scroller = $('thumbs'); scroller.innerHTML = ''; scroller.scrollTop = 0;
   const box = document.createElement('div'); box.className = 'tgrid'; scroller.appendChild(box);
   const cat = ART.CATS.find(c => c.id === catId);
-  $('gridTitle').textContent = cat ? cat.name : 'My Pictures';
-  scroller.style.setProperty('--c', cat ? cat.color : '#ffc61a');
+  $('gridTitle').textContent = cat ? cat.name : catId === 'pages' ? 'My Pages' : 'My Pictures';
+  scroller.style.setProperty('--c', cat ? cat.color : catId === 'pages' ? '#c792ff' : '#ffc61a');
+  if (catId === 'pages') return openPages(box);
   let items;
   if (cat) items = Array.from({ length: cat.count }, (_, i) => [catId, i]);
   else items = [...(thumbsCache.times || new Map())].sort((a, b) => b[1] - a[1]).map(([k]) => { const [c, i] = k.split(':'); return [c, +i]; });
@@ -831,12 +1044,76 @@ function openGrid(catId) {
   for (const [c, i] of items) {
     const key = c + ':' + i, b = document.createElement('button'), img = document.createElement('img');
     b.className = 'thumb' + (thumbsCache.has(key) ? ' done' : ''); img.alt = '';
-    const src = thumbsCache.get(key) || svgURL(c, i);
+    const src = thumbsCache.get(key) || (c === 'page' ? (pagesCache.get(i) || {}).thumb : svgURL(c, i));
     if (io) { img.dataset.src = src; io.observe(img); } else img.src = src;
     b.appendChild(img); b.onclick = () => openPaint(c, i); box.appendChild(b);
   }
   show('grid');
 }
+function openPages(box) {
+  const add = document.createElement('button'); add.className = 'thumb add'; add.setAttribute('aria-label', 'Add a picture');
+  add.innerHTML = `<img alt="" src="${PLUS_ICON}">`; add.onclick = () => $('fileIn').click(); box.appendChild(add);
+  for (const [id, pg] of [...pagesCache].sort((a, b) => b[1].t - a[1].t)) {
+    const key = 'page:' + id, b = document.createElement('button'), img = document.createElement('img');
+    b.className = 'thumb' + (thumbsCache.has(key) ? ' done' : ''); img.alt = ''; img.src = thumbsCache.get(key) || pg.thumb;
+    b.appendChild(img); box.appendChild(b);
+    let timer = null, held = false, sx = 0, sy = 0;
+    b.addEventListener('pointerdown', e => { held = false; sx = e.clientX; sy = e.clientY; timer = setTimeout(() => { held = true; askThen(async () => { await DB.delPage(id); await DB.del(key); await loadThumbs(); openGrid('pages'); }); }, 900); });
+    b.addEventListener('pointermove', e => { if (Math.hypot(e.clientX - sx, e.clientY - sy) > 12) clearTimeout(timer); });
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => clearTimeout(timer));
+    b.onclick = () => { if (!held) openPaint('page', id); };
+  }
+  show('grid');
+}
+
+/* ===== adding your own picture (from Photos or Files) ===== */
+// Turns a photo or downloaded colouring sheet into clean black outlines on white.
+async function makeLineArt(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await loadImage(url);
+    const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d', { willReadFrequently: true });
+    x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
+    const sc = Math.min((N * 0.95) / im.width, (N * 0.95) / im.height), w = im.width * sc, h = im.height * sc;
+    const L = Math.ceil((N - w) / 2), T = Math.ceil((N - h) / 2), Rt = Math.floor((N + w) / 2), Bt = Math.floor((N + h) / 2);
+    x.drawImage(im, (N - w) / 2, (N - h) / 2, w, h);
+    const d = x.getImageData(0, 0, N, N), px = d.data, g = new Float32Array(N * N);
+    for (let p = 0, q = 0; p < N * N; p++, q += 4) g[p] = px[q] * 0.3 + px[q + 1] * 0.59 + px[q + 2] * 0.11;
+    // compare each pixel with its neighbourhood, so shadows and uneven light in photos don't turn black
+    const W = N + 1, I = new Float64Array(W * W);
+    for (let y = 0; y < N; y++) { let row = 0; for (let xx = 0; xx < N; xx++) { row += g[y * N + xx]; I[(y + 1) * W + xx + 1] = I[y * W + xx + 1] + row; } }
+    const R = 18, ink = new Uint8Array(N * N);
+    for (let y = T; y < Bt; y++) { const y0 = Math.max(T, y - R), y1 = Math.min(Bt, y + R + 1);
+      for (let xx = L; xx < Rt; xx++) { const x0 = Math.max(L, xx - R), x1 = Math.min(Rt, xx + R + 1);
+        const mean = (I[y1 * W + x1] - I[y0 * W + x1] - I[y1 * W + x0] + I[y0 * W + x0]) / ((y1 - y0) * (x1 - x0)), v = g[y * N + xx];
+        if (xx < L + 3 || xx >= Rt - 3 || y < T + 3 || y >= Bt - 3) continue;
+        if (v < 80 || (v < mean - 22 && v < 200)) ink[y * N + xx] = 1; } }
+    // remove specks of dust/noise
+    const lab = new Int32Array(N * N), st = new Int32Array(N * N); let id = 0;
+    for (let p = 0; p < N * N; p++) { if (!ink[p] || lab[p]) continue; id++; let sp = 0, n = 0; st[sp++] = p; lab[p] = id; const mem = [];
+      while (sp) { const c0 = st[--sp], cx = c0 % N; mem.push(c0); n++;
+        for (const nb of [cx > 0 ? c0 - 1 : -1, cx < N - 1 ? c0 + 1 : -1, c0 - N, c0 + N]) if (nb >= 0 && nb < N * N && ink[nb] && !lab[nb]) { lab[nb] = id; st[sp++] = nb; } }
+      if (n < 30) for (const m of mem) ink[m] = 0; }
+    // thicken lines a little so there are no tiny gaps
+    const out = x.createImageData(N, N), o = out.data;
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      const p = y * N + xx; let on = ink[p];
+      if (!on) on = (xx > 0 && ink[p - 1]) || (xx < N - 1 && ink[p + 1]) || (y > 0 && ink[p - N]) || (y < N - 1 && ink[p + N]);
+      const v = on ? 0 : 255; o[p * 4] = o[p * 4 + 1] = o[p * 4 + 2] = v; o[p * 4 + 3] = 255; }
+    x.putImageData(out, 0, 0);
+    const t = document.createElement('canvas'); t.width = t.height = 360; t.getContext('2d').drawImage(c, 0, 0, 360, 360);
+    return { line: c.toDataURL('image/png'), thumb: t.toDataURL('image/jpeg', 0.85), t: Date.now() };
+  } finally { URL.revokeObjectURL(url); }
+}
+$('fileIn').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+  show('paint'); fitStage(); $('loading').hidden = false; $('loading').textContent = '✨';
+  try {
+    const rec = await makeLineArt(file), id = rec.t;
+    await DB.putPage(id, rec); pagesCache.set(id, { thumb: rec.thumb, t: rec.t });
+    $('loading').textContent = '✏️'; openPaint('page', id);
+  } catch (err) { $('loading').textContent = '✏️'; toast('That picture didn\'t work, try another'); renderHome(); show('home'); }
+});
 $('backHome').onclick = () => { renderHome(); show('home'); };
 
 /* ===== colours ===== */
@@ -960,8 +1237,9 @@ async function openPaint(cat, i) {
   current = { cat, i, key: cat + ':' + i }; dirty = false; undoStack = []; undoBytes = 0; masks = new Map(); updateUndo();
   show('paint'); fitStage(); $('loading').hidden = false; renderTools();
   pctx.clearRect(0, 0, N, N); lctx.clearRect(0, 0, N, N);
-  const svg = ART.svg(cat, i).replace('width="600" height="600"', `width="${N}" height="${N}"`);
-  const im = await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
+  let im;
+  if (cat === 'page') { const pg = await DB.getPage(i); if (!pg) { renderHome(); show('home'); return; } im = await loadImage(pg.line); }
+  else im = await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ART.svg(cat, i).replace('width="600" height="600"', `width="${N}" height="${N}"`)));
   const tmp = document.createElement('canvas'); tmp.width = tmp.height = N; const tctx = tmp.getContext('2d', { willReadFrequently: true });
   tctx.fillStyle = '#fff'; tctx.fillRect(0, 0, N, N); tctx.drawImage(im, 0, 0, N, N);
   const src = tctx.getImageData(0, 0, N, N).data;
@@ -1095,9 +1373,11 @@ for (const ev of ['gesturestart', 'gesturechange', 'touchmove']) document.addEve
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 /* bin */
-$('binBtn').onclick = () => { $('ask').hidden = false; };
-$('askNo').onclick = () => { $('ask').hidden = true; };
-$('askYes').onclick = () => { $('ask').hidden = true; pushUndo(0, 0, N, N); pctx.clearRect(0, 0, N, N); dirty = true; };
+let askAction = null;
+function askThen(fn) { askAction = fn; $('ask').hidden = false; }
+$('binBtn').onclick = () => askThen(() => { pushUndo(0, 0, N, N); pctx.clearRect(0, 0, N, N); dirty = true; });
+$('askNo').onclick = () => { $('ask').hidden = true; askAction = null; };
+$('askYes').onclick = () => { $('ask').hidden = true; const f = askAction; askAction = null; if (f) f(); };
 
 /* tick: save and go home */
 function isBlank() { const d = pctx.getImageData(0, 0, N, N).data; for (let i = 3; i < d.length; i += 16) if (d[i]) return false; return true; }
