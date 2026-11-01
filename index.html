@@ -106,10 +106,11 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 #drawer { position: fixed; top: 0; bottom: 0; right: 0; width: min(440px, 88vw); background: #fff; z-index: 21; transform: translateX(105%); transition: transform .3s cubic-bezier(.3, 1.3, .5, 1); border-radius: 36px 0 0 36px; box-shadow: -10px 0 40px rgba(74, 43, 94, .25); display: flex; flex-direction: column; padding: calc(var(--sat) + 14px) calc(var(--sar) + 14px) calc(var(--sab) + 14px) 18px; }
 #drawer.open { transform: none; }
 .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
-.tab { flex: 1; height: 70px; border-radius: 22px; background: #f6eefb; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tab { flex: 1; min-width: 0; height: 70px; border-radius: 22px; background: #f6eefb; font-size: clamp(16px, 2.2vw, 20px); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.recentIcon { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%238a5cff' stroke-width='2.4'/%3E%3Cpath d='M12 7v5l3.5 2' fill='none' stroke='%238a5cff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/80% no-repeat; box-shadow: inset 0 0 0 1px #e3d6ef; }
 .tab.on { background: linear-gradient(135deg, #ffd6ec, #e3d6ff); box-shadow: inset 0 0 0 4px var(--accent2); }
 .tab i { width: 34px; height: 34px; border-radius: 50%; display: inline-block; }
-.swatches { flex: 1; overflow-y: auto; touch-action: pan-y; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 14px; align-content: start; padding: 6px 4px 10px; }
+.swatches { flex: 1; overflow-y: auto; touch-action: pan-y; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 14px; align-content: start; padding: 12px 12px 14px; }
 .swatches.small { grid-template-columns: repeat(8, 1fr); gap: 9px; }
 .swatches.small .sw { box-shadow: 0 2px 0 rgba(0,0,0,.12); }
 .swatches.small .sw.light { box-shadow: 0 2px 0 rgba(0,0,0,.12), inset 0 0 0 1.5px #d9cde3; }
@@ -175,6 +176,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
   <div class="tabs">
     <button class="tab on" data-tab="plain"><i style="background:conic-gradient(#ff4d6d,#ffc61a,#35c46a,#3b8cff,#b266ff,#ff4d6d)"></i>Colours</button>
     <button class="tab" data-tab="magic"><i id="magicIcon"></i>Magic</button>
+    <button class="tab" data-tab="recent"><i class="recentIcon"></i>Recent</button>
   </div>
   <div class="swatches" id="swatches"></div>
 </aside>
@@ -1236,7 +1238,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.2';
+const VERSION = 'v1.3';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -1469,16 +1471,26 @@ function renderTools() {
 
 /* colour drawer */
 let tab = 'plain', more = false;
+// recently used colours, newest first (remembered on this device)
+const colKey = c => typeof c === 'string' ? c : 'm:' + c.id;
+const colFromKey = k => k.startsWith('m:') ? MAGIC.find(m => 'm:' + m.id === k) : k;
+let recent = [];
+try { recent = (JSON.parse(localStorage.getItem('cb-recent')) || []).map(colFromKey).filter(Boolean); } catch (e) {}
+function useColour(c) {
+  recent = [c, ...recent.filter(r => colKey(r) !== colKey(c))].slice(0, 24);
+  try { localStorage.setItem('cb-recent', JSON.stringify(recent.map(colKey))); } catch (e) {}
+}
 function renderSwatches() {
   const box = $('swatches'); box.innerHTML = '';
-  const list = tab === 'magic' ? MAGIC : more ? MORE : PLAIN;
+  const list = tab === 'recent' ? recent : tab === 'magic' ? MAGIC : more ? MORE : PLAIN;
+  if (tab === 'recent' && !recent.length) { box.innerHTML = '<div class="empty" style="grid-column:1/-1;font-size:20px;padding:40px 10px">Colours you use will show up here 🎨</div>'; box.classList.remove('small'); $('drawer').classList.remove('wide'); return; }
   box.classList.toggle('small', tab === 'plain' && more); $('drawer').classList.toggle('wide', tab === 'plain' && more);
   if (tab === 'plain') { const t = document.createElement('button'); t.className = 'moreBtn'; t.innerHTML = more ? '◀ Fewer colours' : '🎨 More colours ▶'; t.onclick = () => { more = !more; renderSwatches(); }; box.appendChild(t); }
   for (const col of list) {
     const b = document.createElement('button'); b.className = 'sw' + (col === colour ? ' on' : '') + (col === '#ffffff' || col === '#fff5a8' || /9[0-9]%\)$/.test(col) ? ' light' : '');
     b.style.background = swatchBg(col); b.style.backgroundSize = 'cover';
     if (typeof col === 'object' && col.type === 'fluoro') b.style.boxShadow = `0 0 16px ${col.c}, 0 4px 0 rgba(0,0,0,.12)`;
-    b.onclick = () => { colour = col; if (tool.id === 'eraser') tool = TOOLS[2]; b.classList.add('pop', 'on'); renderTools(); setTimeout(closeDrawer, 260); };
+    b.onclick = () => { colour = col; useColour(col); if (tool.id === 'eraser') tool = TOOLS[2]; b.classList.add('pop', 'on'); renderTools(); setTimeout(closeDrawer, 260); };
     box.appendChild(b);
   }
 }

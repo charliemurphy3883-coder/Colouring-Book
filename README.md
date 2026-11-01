@@ -6,7 +6,7 @@ Upload all 7 files: index.html, manifest.webmanifest, sw.js, icon-192.png, icon-
 
 - Pick a category, then a picture.
 - Tools: pencil (thin), pen, marker, paint brush (thick), eraser.
-- Tap the big colour circle to open the colours: "Colours" (37 bright colours, or tap More colours for a 100-colour chart) or "Magic" (rainbow, glitter, fluoro, gold/silver, stars and hearts).
+- Tap the big colour circle to open the colours: "Colours" (37 bright colours, or tap More colours for a 100-colour chart) and "Recent" (the last 24 colours used, newest first) or "Magic" (rainbow, glitter, fluoro, gold/silver, stars and hearts).
 - Colour only goes inside the area where your finger first touched. Lift and touch another area to colour that one.
 - Pinch with two fingers to zoom in on small areas and drag with two fingers to move around. The magnifying-glass button zooms back out.
 - Undo arrow, bin (start again, asks first), green tick (saves and goes home).
