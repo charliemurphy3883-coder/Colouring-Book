@@ -162,6 +162,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .prepBox { background: #fff; border-radius: 30px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; box-shadow: var(--shadow); max-width: 100%; }
 .prepPic { position: relative; width: min(62vh, 86vw); aspect-ratio: 1; border-radius: 18px; overflow: hidden; box-shadow: inset 0 0 0 2px #eee; }
 #prepCv { width: 100%; height: 100%; display: block; }
+#prepMsg { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font-size: 17px; font-weight: 600; color: #6b4a80; pointer-events: none; }
 #prepWait { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; background: rgba(255,255,255,.75); }
 .modes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .modes button { padding: 10px 16px; border-radius: 999px; background: #f6eefb; font-size: 18px; font-weight: 700; }
@@ -222,9 +223,9 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
 <div id="prep" hidden>
   <div class="prepBox">
-    <div class="prepPic"><canvas id="prepCv" width="1200" height="1200"></canvas><div id="prepWait">✨</div></div>
+    <div class="prepPic"><canvas id="prepCv" width="1200" height="1200"></canvas><div id="prepWait">✨</div><div id="prepMsg"></div></div>
     <div class="modes">
-      <button data-m="simple">🙂 Simple</button><button data-m="detail">✨ Detailed</button><button data-m="sheet">📄 Colouring page</button>
+      <button data-m="ai">✨ AI drawing</button><button data-m="aidetail">✨ AI detailed</button><button data-m="simple">✏️ Basic</button><button data-m="sheet">📄 Colouring page</button>
     </div>
     <div class="row">
       <button class="no" id="prepNo" aria-label="Cancel"><svg viewBox="0 0 48 48"><path d="M14 14l20 20M34 14 14 34" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg></button>
@@ -1288,7 +1289,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.6';
+const VERSION = 'v1.7';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -1496,6 +1497,83 @@ function photoLines(im, detail) {
   return c;
 }
 
+/* ===== AI drawing: a small AI model (Informative Drawings, MIT licence) runs on the device ===== */
+// Turns the AI sketch (grey, 1 = white) into bold, closed colouring lines at N x N.
+function aiCleanup(gray, w, h, detail, N) {
+  const n = w * h;
+  // light smoothing of the sketch, then pick the darker strokes
+  const g = Float32Array.from(gray), t = new Float32Array(n);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const p = y * w + x; t[p] = (g[p] * 2 + g[x > 0 ? p - 1 : p] + g[x < w - 1 ? p + 1 : p]) / 4; }
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const p = y * w + x; g[p] = (t[p] * 2 + t[y > 0 ? p - w : p] + t[y < h - 1 ? p + w : p]) / 4; }
+  // scale the darkness to this picture: its darkest strokes count as 1
+  const dk = new Float32Array(n); for (let p = 0; p < n; p++) dk[p] = 1 - g[p];
+  const srt = Float32Array.from(dk).sort(), top = Math.max(0.15, srt[Math.floor(n * 0.995)]);
+  const T = detail ? 0.3 : 0.36;
+  // in busy textured areas (fur, grass) only the strongest strokes are kept
+  const W1 = w + 1, I = new Float64Array(W1 * (h + 1));
+  for (let y = 0; y < h; y++) { let s = 0; for (let x = 0; x < w; x++) { s += dk[y * w + x]; I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + s; } }
+  const r = Math.max(4, Math.round(Math.max(w, h) / 50)), busy = detail ? 1.2 : 1.15;
+  let ink = new Uint8Array(n);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1), y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+    const mean = (I[y1 * W1 + x1] - I[y0 * W1 + x1] - I[y1 * W1 + x0] + I[y0 * W1 + x0]) / ((x1 - x0) * (y1 - y0)), p = y * w + x;
+    ink[p] = (dk[p] - busy * mean) / top > T * 0.6 && dk[p] / top > T ? 1 : 0; }
+  const nb8 = (p, f) => { const x = p % w; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; if ((x === 0 && dx < 0) || (x === w - 1 && dx > 0)) continue; const q = p + dy * w + dx; if (q >= 0 && q < n) f(q); } };
+  const dropSmall = (a, min) => { const seen = new Uint8Array(n); for (let p = 0; p < n; p++) { if (!a[p] || seen[p]) continue; const grp = [p]; seen[p] = 1; for (let i = 0; i < grp.length; i++) nb8(grp[i], q => { if (a[q] && !seen[q]) { seen[q] = 1; grp.push(q); } }); if (grp.length < min) for (const q of grp) a[q] = 0; } };
+  const scale = Math.max(w, h) / 512;
+  dropSmall(ink, Math.round((detail ? 18 : 40) * scale));
+  // close small gaps (grow, then shrink back) so areas are sealed for colouring
+  const grow = (a, r) => { let cur = a; for (let k = 0; k < r; k++) { const o = cur.slice(); for (let p = 0; p < n; p++) if (cur[p]) nb8(p, q => { o[q] = 1; }); cur = o; } return cur; };
+  const shrink = (a, r) => { let cur = a; for (let k = 0; k < r; k++) { const o = cur.slice(); for (let p = 0; p < n; p++) if (cur[p]) { let all = true; nb8(p, q => { if (!cur[q]) all = false; }); if (!all) o[p] = 0; } cur = o; } return cur; };
+  const R = Math.max(2, Math.round(3 * scale));
+  ink = shrink(grow(ink, R), R - 1); // net: lines one step bolder, gaps up to ~2R closed
+  // tiny holes between lines that are too small to colour get filled in
+  { const hole = new Uint8Array(n); for (let p = 0; p < n; p++) hole[p] = ink[p] ? 0 : 1;
+    const seen = new Uint8Array(n), minHole = Math.round((detail ? 30 : 80) * scale * scale);
+    for (let p = 0; p < n; p++) { if (!hole[p] || seen[p]) continue; const grp = [p]; seen[p] = 1; let edge = false;
+      for (let i = 0; i < grp.length; i++) { const c = grp[i], x = c % w; if (x === 0 || x === w - 1 || c < w || c >= n - w) edge = true; for (const q of [x > 0 ? c - 1 : -1, x < w - 1 ? c + 1 : -1, c - w, c + w]) if (q >= 0 && q < n && hole[q] && !seen[q]) { seen[q] = 1; grp.push(q); } }
+      if (!edge && grp.length < minHole) for (const q of grp) ink[q] = 1; } }
+  // draw big and smooth
+  const sm = document.createElement('canvas'); sm.width = w; sm.height = h; const sx = sm.getContext('2d');
+  const id = sx.createImageData(w, h); for (let p = 0; p < n; p++) { const v = ink[p] ? 0 : 255; id.data[p * 4] = id.data[p * 4 + 1] = id.data[p * 4 + 2] = v; id.data[p * 4 + 3] = 255; }
+  sx.putImageData(id, 0, 0);
+  const c = document.createElement('canvas'); c.width = c.height = N; const x = c.getContext('2d', { willReadFrequently: true });
+  x.fillStyle = '#fff'; x.fillRect(0, 0, N, N);
+  const sc = (N * 0.95) / Math.max(w, h), dw = w * sc, dh = h * sc, L = (N - dw) / 2, Tp = (N - dh) / 2;
+  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; x.drawImage(sm, L, Tp, dw, dh);
+  const d = x.getImageData(0, 0, N, N), q = d.data, gg = new Float32Array(N * N);
+  for (let p = 0; p < N * N; p++) gg[p] = q[p * 4];
+  { const rad = Math.max(1, Math.round(sc * 0.8)), tt = new Float32Array(N * N), kk = 2 * rad + 1, cl = v => v < 0 ? 0 : v > N - 1 ? N - 1 : v;
+    for (let pass = 0; pass < 2; pass++) {
+      for (let y = 0; y < N; y++) { const o = y * N; let s = 0; for (let i = -rad; i <= rad; i++) s += gg[o + cl(i)]; for (let xx = 0; xx < N; xx++) { tt[o + xx] = s / kk; s += gg[o + cl(xx + rad + 1)] - gg[o + cl(xx - rad)]; } }
+      for (let xx = 0; xx < N; xx++) { let s = 0; for (let i = -rad; i <= rad; i++) s += tt[cl(i) * N + xx]; for (let y = 0; y < N; y++) { gg[y * N + xx] = s / kk; s += tt[cl(y + rad + 1) * N + xx] - tt[cl(y - rad) * N + xx]; } }
+    } }
+  for (let p = 0; p < N * N; p++) { const v = gg[p] < 140 ? 0 : 255; q[p * 4] = q[p * 4 + 1] = q[p * 4 + 2] = v; q[p * 4 + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  x.strokeStyle = '#000'; x.lineWidth = Math.max(4, N / 200); x.strokeRect(L, Tp, dw, dh);
+  return c;
+}
+
+const ORT_URL = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/';
+let aiSession = null;
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function aiReady() {
+  if (aiSession) return aiSession;
+  if (!window.ort) await loadScript(ORT_URL + 'ort.min.js');
+  ort.env.wasm.numThreads = 1; ort.env.wasm.wasmPaths = ORT_URL;
+  aiSession = await ort.InferenceSession.create('model.onnx', { executionProviders: ['wasm'] });
+  return aiSession;
+}
+async function aiLines(im, detail) {
+  const s = await aiReady();
+  const M = detail ? 512 : 384, k = M / Math.max(im.width, im.height);
+  const w = Math.max(8, Math.round(im.width * k / 8) * 8), h = Math.max(8, Math.round(im.height * k / 8) * 8);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true });
+  x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, w, h);
+  const px = x.getImageData(0, 0, w, h).data, n = w * h, data = new Float32Array(3 * n);
+  for (let p = 0; p < n; p++) { data[p] = px[p * 4] / 255; data[n + p] = px[p * 4 + 1] / 255; data[2 * n + p] = px[p * 4 + 2] / 255; }
+  const out = (await s.run({ input: new ort.Tensor('float32', data, [1, 3, h, w]) })).output;
+  return aiCleanup(out.data, out.dims[3], out.dims[2], detail, N);
+}
 function lineRecord(c) {
   const t = document.createElement('canvas'); t.width = t.height = 360; t.getContext('2d').drawImage(c, 0, 0, 360, 360);
   return { line: c.toDataURL('image/png'), thumb: t.toDataURL('image/jpeg', 0.85), t: Date.now() };
@@ -1507,13 +1585,19 @@ async function startPrep(file, mode) {
   try { prep = { im: await loadImage(url), mode, out: null }; } catch (e) { toast('That picture didn\'t work, try another'); return; } finally { URL.revokeObjectURL(url); }
   $('prep').hidden = false; runPrep();
 }
+let prepRun = 0;
 function runPrep() {
   for (const b of document.querySelectorAll('.modes button')) b.classList.toggle('on', b.dataset.m === prep.mode);
-  $('prepWait').hidden = false;
-  setTimeout(() => {
-    try { prep.out = prep.mode === 'sheet' ? sheetLines(prep.im) : photoLines(prep.im, prep.mode === 'detail'); } catch (e) { prep.out = null; }
-    const pc = $('prepCv').getContext('2d'); pc.fillStyle = '#fff'; pc.fillRect(0, 0, N, N); if (prep.out) pc.drawImage(prep.out, 0, 0);
-    $('prepWait').hidden = true;
+  $('prepWait').hidden = false; const run = ++prepRun, mode = prep.mode, ai = mode === 'ai' || mode === 'aidetail';
+  $('prepMsg').textContent = ai ? (aiSession ? 'Drawing…' : 'Getting the AI ready… (first time takes a little longer)') : '';
+  setTimeout(async () => {
+    let out = null;
+    try { out = ai ? await aiLines(prep.im, mode === 'aidetail') : mode === 'sheet' ? sheetLines(prep.im) : photoLines(prep.im, mode === 'detail'); }
+    catch (e) { console.error(e); if (ai && prep && run === prepRun) { toast('AI drawing needs the internet the first time. Using Basic.'); prep.mode = 'simple'; runPrep(); return; } }
+    if (!prep || run !== prepRun) return;
+    prep.out = out;
+    const pc = $('prepCv').getContext('2d'); pc.fillStyle = '#fff'; pc.fillRect(0, 0, N, N); if (out) pc.drawImage(out, 0, 0);
+    $('prepWait').hidden = true; $('prepMsg').textContent = '';
   }, 30);
 }
 for (const b of document.querySelectorAll('.modes button')) b.onclick = () => { if (prep && prep.mode !== b.dataset.m) { prep.mode = b.dataset.m; runPrep(); } };
@@ -1524,7 +1608,7 @@ $('prepYes').onclick = async () => {
   await DB.putPage(id, rec); pagesCache.set(id, { thumb: rec.thumb, t: rec.t });
   openPaint('page', id);
 };
-for (const [inp, mode] of [['fileIn', 'sheet'], ['camIn', 'simple']]) $(inp).addEventListener('change', e => {
+for (const [inp, mode] of [['fileIn', 'sheet'], ['camIn', 'ai']]) $(inp).addEventListener('change', e => {
   const file = e.target.files && e.target.files[0]; e.target.value = ''; if (file) startPrep(file, mode);
 });
 $('backHome').onclick = () => { renderHome(); show('home'); };
