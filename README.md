@@ -1,6 +1,6 @@
 # My Colouring Book
 
-A colouring-in app for little ones: Princesses, Unicorns, Cakes, Lollies, Animals, Puppy Pals, Things That Go and Fairytale (160 pictures each), plus a For Grown-Ups section with fine-line Mandalas, Patterns, Patterned Animals and Flower Gardens (160 each). 1,920 pictures in total.
+A colouring-in app for little ones: Princesses, Unicorns, Cakes, Lollies, Animals, Puppy Pals, Things That Go and Fairytale (160 pictures each), plus a For Big Kids section with fine-line Mandalas, Patterns, Patterned Animals and Flower Gardens (160 each). 1,920 pictures in total.
 
 Upload all 7 files: index.html, manifest.webmanifest, sw.js, icon-192.png, icon-512.png, apple-touch-icon.png, README.md
 

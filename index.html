@@ -92,12 +92,36 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 @media (min-width: 600px) { .cats { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 900px) and (orientation: landscape) { .cats { grid-template-columns: repeat(5, 1fr); max-width: 1200px; } }
 @media (orientation: portrait) {
-  #paint { grid-template-columns: 1fr; grid-template-rows: calc(var(--sat) + 100px) 1fr calc(var(--sab) + 108px); }
+  #paint { grid-template-columns: minmax(0, 1fr); grid-template-rows: calc(var(--sat) + 100px) minmax(0, 1fr) calc(var(--sab) + 108px); }
   .tools, .side { flex-direction: row; padding: 8px 10px; }
   .tools { grid-row: 3; padding-bottom: calc(var(--sab) + 10px); }
   .side { grid-row: 1; padding-top: calc(var(--sat) + 8px); }
   .side .grp { flex-direction: row; }
   .stageWrap { grid-row: 2; padding: 6px 10px; }
+}
+
+/* phones: smaller buttons so everything fits */
+@media (max-width: 560px) and (orientation: portrait) {
+  #paint { grid-template-rows: calc(var(--sat) + 78px) minmax(0, 1fr) calc(var(--sab) + 84px); }
+  .tools, .side { gap: 8px; padding-left: 8px; padding-right: 8px; }
+  .tool { width: 60px; height: 60px; border-radius: 18px; }
+  .act { width: 56px; height: 56px; } .act.tick { width: 62px; height: 62px; }
+  #colourBtn { width: 66px; height: 66px; } #colourBtn::after { width: 28px; height: 28px; right: -6px; bottom: -6px; }
+  .zoomOut { width: 50px; height: 50px; left: 10px; bottom: 10px; }
+  .bar h2 { font-size: 26px; } .round { width: 56px; height: 56px; }
+  .tgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+  .title { font-size: 34px; margin: 14px 0; } .cats { gap: 12px; } .cat { border-radius: 24px; padding: 8px 8px 6px; } .cat b { font-size: 18px; } .cat.adult b { font-size: 15px; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  #paint { grid-template-columns: calc(var(--sal) + 76px) minmax(0, 1fr) calc(var(--sar) + 76px); }
+  .tools, .side { gap: 6px; padding-top: calc(var(--sat) + 6px); padding-bottom: calc(var(--sab) + 6px); }
+  .tool { width: 60px; height: 60px; border-radius: 18px; }
+  .tool.on { transform: scale(1.04); outline-width: 4px; }
+  .act { width: 54px; height: 54px; } .act.tick { width: 60px; height: 60px; }
+  #colourBtn { width: 62px; height: 62px; } #colourBtn::after { width: 26px; height: 26px; right: -6px; bottom: -6px; }
+  .zoomOut { width: 48px; height: 48px; left: 8px; bottom: 8px; }
+  .stageWrap { padding: 6px; }
+  .tab { height: 54px; } .moreBtn { height: 46px; font-size: 18px; }
 }
 
 /* colour drawer */
@@ -1238,7 +1262,7 @@ const ART = (() => {
 <script>
 (() => {
 'use strict';
-const VERSION = 'v1.3';
+const VERSION = 'v1.4';
 const N = 1200;                 // canvas size (pixels) for colouring
 const $ = id => document.getElementById(id);
 $('ver').textContent = VERSION;
@@ -1277,7 +1301,7 @@ const PLUS_ICON = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg
 function renderHome() {
   const cats = $('cats'); cats.innerHTML = '';
   const kids = ART.CATS.filter(c => !c.adult), adults = ART.CATS.filter(c => c.adult);
-  const tiles = [...kids.map(c => ({ ...c, cover: svgURL(c.id, 0) })), { id: 'pages', name: 'My Pages', color: '#c792ff' }, { id: 'mine', name: 'My Pictures', color: '#ffc61a' }, { heading: 'For Grown-Ups' }, ...adults.map(c => ({ ...c, cover: svgURL(c.id, 0) }))];
+  const tiles = [...kids.map(c => ({ ...c, cover: svgURL(c.id, 0) })), { id: 'pages', name: 'My Pages', color: '#c792ff' }, { id: 'mine', name: 'My Pictures', color: '#ffc61a' }, { heading: 'For Big Kids' }, ...adults.map(c => ({ ...c, cover: svgURL(c.id, 0) }))];
   for (const c of tiles) {
     if (c.heading) { const h = document.createElement('h2'); h.className = 'section'; h.textContent = c.heading; cats.appendChild(h); continue; }
     const b = document.createElement('button'); b.className = 'cat' + (c.adult ? ' adult' : ''); b.style.setProperty('--c', c.color);
