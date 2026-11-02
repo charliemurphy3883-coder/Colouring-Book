@@ -2,9 +2,7 @@
 
 A colouring-in app for little ones: Princesses, Unicorns, Cakes, Lollies, Animals, Puppy Pals, Things That Go and Fairytale (160 pictures each), plus a For Big Kids section with fine-line Mandalas, Patterns, Patterned Animals and Flower Gardens (160 each). 1,920 pictures in total.
 
-Upload all 8 files: index.html, manifest.webmanifest, sw.js, icon-192.png, icon-512.png, apple-touch-icon.png, README.md, model.onnx
-
-model.onnx is the AI drawing model (Informative Drawings by Caroline Chan, MIT licence; browser version by josephrocca, MIT licence). It runs on the device; photos never leave it.
+Upload all 7 files: index.html, manifest.webmanifest, sw.js, icon-192.png, icon-512.png, apple-touch-icon.png, README.md
 
 - Pick a category, then a picture.
 - Tools: pencil (thin), pen, marker, paint brush (thick), eraser.
@@ -12,9 +10,7 @@ model.onnx is the AI drawing model (Informative Drawings by Caroline Chan, MIT l
 - Colour only goes inside the area where your finger first touched. Lift and touch another area to colour that one.
 - Pinch with two fingers to zoom in on small areas and drag with two fingers to move around. The magnifying-glass button zooms back out.
 - Undo arrow, bin (start again, asks first), green tick (saves and goes home).
-- My Pages: tap "Take a photo" to use the camera. An AI turns the photo into a line drawing. Pick AI drawing, AI detailed, Basic, or Colouring page (for a photo of a printed sheet) before ticking to start colouring. The AI needs the internet the first time it's used, then works offline.
-- To undo the AI update: the previous version (v1.6) is in the "Backup v1.6" folder. Upload its index.html, sw.js and README.md over the new ones.
-- My Pages: tap "Add a picture" to add your own colouring sheet from Photos or Files (a downloaded printable or a photo of a printed page). It's turned into clean outlines and colours just like the built-in pictures. Press and hold a page for about a second to delete it.
+- My Pages: tap "Take a photo" to photograph a printed colouring sheet, or "Add a picture" to choose one from Photos or Files. It's cleaned up into crisp outlines; tick to use it or cross to try again.
 - Saved pictures show a star and appear in "My Pictures". Tap one to keep colouring it.
 
 Pictures are saved on the iPad only. The version shows in the top-right corner of the home screen.
